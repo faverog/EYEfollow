@@ -1,3 +1,5 @@
+from math import pi, sin, cos
+
 class Ball:
     def __init__(self, master, canvas, size):
         self.master = master
@@ -6,6 +8,8 @@ class Ball:
         self.cycles = 0
         self.testName = ""
         self.coords = [0,0]
+        self.theta = 0
+        self.radius = 0
         [self.xDelta, self.yDelta] = [0,0]
         [self.x1, self.x2] = [self.coords[0], self.coords[0]+self.size]
         [self.y1, self.y2] = [self.coords[1], self.coords[1]+self.size]
@@ -19,22 +23,33 @@ class Ball:
         # get current x&y of ball
         self.coords = self.canvas.coords(self.ball)[0], self.canvas.coords(self.ball)[1]
         self.canvas.update_idletasks()
+        
+        if self.testName == "Smooth_Horizontal" or self.testName == "Smooth_Vertical":
+            if self.coords[0]+self.size >= self.canvas.winfo_width() or self.coords[0] <= 0:
+                self.xDelta *= -1
+                self.cycles += 1
 
-        if self.coords[0]+self.size >= self.canvas.winfo_width() or self.coords[0] <= 0:
-            self.xDelta *= -1
-            self.cycles += 1
+            if self.coords[1]+self.size >= self.canvas.winfo_height() or self.coords[1] <= 0:
+                self.yDelta *= -1
+                self.cycles += 1
+            
+            # Move ball
+            self.canvas.move(self.ball, self.xDelta, self.yDelta)
+        
+        elif self.testName == "Smooth_Circle":
+            if self.theta + self.xDelta >= (self.cycles + 1)*2*pi:
+                self.cycles += 1
+            #print(self.theta + self.xDelta)
+            # Move ball
+            self.theta += self.xDelta
+            self.canvas.moveto(self.ball, self.master.width/2 + self.radius*cos(self.theta + self.xDelta), self.master.height/2 + self.radius*sin(self.theta + self.xDelta))
 
-        if self.coords[1]+self.size >= self.canvas.winfo_height() or self.coords[1] <= 0:
-            self.yDelta *= -1
-            self.cycles += 1
-
-        if self.cycles >= 2:
+        if self.cycles >= 2: # or (how to exit saccade tests)
             self.cycles = 0
             self.master.activeButtons[self.testName] = False
             self.master.test_routine()
             return
 
-        self.canvas.move(self.ball, self.xDelta, self.yDelta)
         self.canvas.after(5, self.move_ball)
 
     def set_test(self, testName):
@@ -48,5 +63,7 @@ class Ball:
             self.yDelta = 5
             self.canvas.moveto(self.ball, self.master.width/2, self.master.height/2)
         elif testName == "Smooth_Circle":
-            # self.xDelta, self.yDelta = circleCalc()
-            pass
+            self.xDelta = 0.01
+            self.radius = 1000
+            self.theta = 0
+            self.canvas.moveto(self.ball, self.master.width/2, self.master.height/2)
