@@ -1,5 +1,5 @@
 '''
-EYEfollow
+EYEfollow 1.0
 Gian Favero and Steven Caro
 December 2021
 '''
