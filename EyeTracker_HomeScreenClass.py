@@ -1,5 +1,13 @@
+'''
+EYEfollow 1.0
+Home Screen Class
+Gian Favero and Steven Caro
+December 2021
+'''
+
 import tkinter as tk
 from tkinter.messagebox import *
+from PIL import ImageTk, Image
 
 import EyeTracker_BallClass as Ball
 

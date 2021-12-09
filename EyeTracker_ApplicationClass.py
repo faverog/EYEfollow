@@ -1,5 +1,6 @@
 '''
 EYEfollow 1.0
+Application Class
 Gian Favero and Steven Caro
 December 2021
 '''
@@ -55,6 +56,7 @@ class Application(tk.Tk):
     def end_fullscreen(self, event=None):
         self.attributes("-fullscreen", False)
         self.state("zoomed")
+        self.config(cursor="arrow")
         self.update_idletasks()
         self.width = self.winfo_width()
         self.height = self.winfo_height()
@@ -70,6 +72,7 @@ class Application(tk.Tk):
                 message='Are you sure you want to quit?')
         if self.answer:
             self.frame.tkraise()
+            self.config(cursor="arrow")
             self.activeButtons = {"Vertical_Saccade" : False, "Horizontal_Saccade" : False, "Smooth_Circle" : False,
                                     "Smooth_Vertical" : False, "Smooth_Horizontal" : False}
             for key in self.activeButtons.keys():
@@ -96,11 +99,13 @@ class Application(tk.Tk):
         for key, item in self.activeButtons.items():
             if item is True:
                 allFalse=False
+                self.config(cursor="none")
                 self.ball.set_test(key)
                 self.ball.move_ball()
                 break
         if allFalse is True:
             self.routine_finished()
+            self.config(cursor="arrow")
 
 if __name__ == '__main__':
     app = Application()
