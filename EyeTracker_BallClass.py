@@ -14,6 +14,7 @@ class Ball:
         self.canvas = canvas
         self.size = size
         self.cycles = 0
+        self.duration = 0
         self.testName = ""
         self.coords = [0,0]
         self.theta = 0
@@ -73,7 +74,7 @@ class Ball:
                 self.canvas.itemconfig(self.ball, fill="white")
                 self.canvas.itemconfig(self.additionalBall, fill="green")
 
-        if self.cycles >= 2: # or (how to exit saccade tests)
+        if self.cycles >= self.duration: # or (how to exit saccade tests)
             self.cycles = 0
             self.master.activeButtons[self.testName] = False
             self.master.test_routine()
@@ -91,12 +92,14 @@ class Ball:
             self.xDelta = 5
             self.yDelta = 0
             self.cycleTime = 5
+            self.duration = 2
             self.canvas.moveto(self.ball, self.master.width/2, self.master.height/2)
 
         elif testName == "Smooth_Vertical":
             self.xDelta = 0
             self.yDelta = 5
             self.cycleTime = 5
+            self.duration = 2
             self.canvas.moveto(self.ball, self.master.width/2, self.master.height/2)
 
         elif testName == "Smooth_Circle":
@@ -104,16 +107,19 @@ class Ball:
             self.radius = self.master.height / 2.16
             self.theta = 0
             self.cycleTime = 5
+            self.duration = 2
             self.canvas.moveto(self.ball, self.master.width/2, self.master.height/2)
 
         elif testName == "Horizontal_Saccade":
             self.cycleTime = 1500
+            self.duration = 10
             self.canvas.moveto(self.ball, self.master.width/5, self.master.height/2)
             self.canvas.moveto(self.additionalBall, 4*self.master.width/5, self.master.height/2)
             self.canvas.itemconfig(self.additionalBall, fill="white")
 
         elif testName == "Vertical_Saccade":
             self.cycleTime = 1500
+            self.duration = 10
             self.canvas.moveto(self.ball, self.master.width/2, self.master.height/8)
             self.canvas.moveto(self.additionalBall, self.master.width/2, 7*self.master.height/8)
             self.canvas.itemconfig(self.additionalBall, fill="white")
