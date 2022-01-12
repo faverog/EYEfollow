@@ -48,10 +48,10 @@ class Application(tk.Tk):
         self.ball = Ball(self, self.main_canvas, 15)
         
     def toggle_fullscreen(self, event=None):
-            self.attributes("-fullscreen", True)
-            self.update_idletasks()
-            self.width = self.winfo_width()
-            self.height = self.winfo_height()
+        self.attributes("-fullscreen", True)
+        self.update_idletasks()
+        self.width = self.winfo_width()
+        self.height = self.winfo_height()
 
     def end_fullscreen(self, event=None):
         self.attributes("-fullscreen", False)
