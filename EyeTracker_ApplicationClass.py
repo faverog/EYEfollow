@@ -5,6 +5,7 @@ Gian Favero and Steven Caro
 December 2021
 '''
 
+from enum import Enum
 import tkinter as tk
 from tkinter.constants import CENTER
 from tkinter.messagebox import *
@@ -17,11 +18,14 @@ from EyeTracker_MainCanvasClass import Main_Canvas
 # Set resolution for screen
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
+class CURRENT_FRAME(Enum):
+    HOME = 1
+    MAIN = 2
+
 class Application(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title("EyeFollow, FC 2021")
-        self.answer = False
         container = tk.Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
@@ -39,6 +43,7 @@ class Application(tk.Tk):
         self.frame = Home_Screen(master=container, controller=self)
         self.frame.grid(row=0, column=0, sticky="nsew")
         self.frame.tkraise()
+        self.current_frame = CURRENT_FRAME.HOME
 
         self.main_canvas = Main_Canvas(master=container, controller=self)
 
@@ -46,6 +51,8 @@ class Application(tk.Tk):
                             "Smooth_Vertical" : False, "Smooth_Horizontal" : False}
 
         self.ball = Ball(self, self.main_canvas, 15)
+
+        self.answer = False
         
     def toggle_fullscreen(self, event=None):
         self.attributes("-fullscreen", True)
@@ -66,17 +73,20 @@ class Application(tk.Tk):
         self.main_canvas.place(relx=0.5, rely=0.5, anchor=CENTER)
         tk.Misc.lift(self.main_canvas)
         self.test_routine()
+        self.current_frame = CURRENT_FRAME.MAIN
 
     def quit_routine(self, event=None):
-        self.answer = askyesno(title='Quit Routine',
-                message='Are you sure you want to quit?')
-        if self.answer:
-            self.frame.tkraise()
-            self.config(cursor="arrow")
-            self.activeButtons = {"Vertical_Saccade" : False, "Horizontal_Saccade" : False, "Smooth_Circle" : False,
-                                    "Smooth_Vertical" : False, "Smooth_Horizontal" : False}
-            for key in self.activeButtons.keys():
-                self.frame.onOff(key)
+        if self.current_frame == CURRENT_FRAME.MAIN:
+            self.answer = askyesno(title='Quit Routine',
+                    message='Are you sure you want to quit?')
+            if self.answer:
+                self.frame.tkraise()
+                self.config(cursor="arrow")
+                self.activeButtons = {"Vertical_Saccade" : False, "Horizontal_Saccade" : False, "Smooth_Circle" : False,
+                                        "Smooth_Vertical" : False, "Smooth_Horizontal" : False}
+                for key in self.activeButtons.keys():
+                    self.frame.onOff(key)
+            self.current_frame = CURRENT_FRAME.HOME
     
     def routine_finished(self, event=None):
         answer = showinfo(title="Completion", message="Eye Test Complete")
@@ -86,6 +96,7 @@ class Application(tk.Tk):
                                     "Smooth_Vertical" : False, "Smooth_Horizontal" : False}
             for key in self.activeButtons.keys():
                 self.frame.onOff(key)
+            self.current_frame = CURRENT_FRAME.HOME
         
     def activate_button(self, page_name):
         if self.activeButtons[page_name] is False:
