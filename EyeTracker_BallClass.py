@@ -6,120 +6,73 @@ December 2021
 '''
 
 from math import pi, sin, cos
-from time import sleep
+from time import time
 
-class Ball:
+routine_duration = 15   # s
+refresh_rate     = 1    # ms
+frequency        = 0.2  # Hz
+
+class Ball_Object: 
     def __init__(self, master, canvas, size):
         self.master = master
         self.canvas = canvas
         self.size = size
-        self.cycles = 0
-        self.duration = 0
-        self.testName = ""
-        self.coords = [0,0]
-        self.theta = 0
-        self.radius = 0
-        self.cycleTime = 0
-        [self.xDelta, self.yDelta] = [0,0]
-        [self.x1, self.x2] = [self.coords[0], self.coords[0]+self.size]
-        [self.y1, self.y2] = [self.coords[1], self.coords[1]+self.size]
-        self.ball = self.canvas.create_oval(self.x1, self.y1, self.x2, self.y2, fill="white")
-        self.additionalBall = self.canvas.create_oval(self.x1, self.y1, self.x2, self.y2, fill="black")
+        self.ball = self.canvas.create_oval(0, 0, self.size, self.size, fill="white")
 
+    def set_tests(self, tests):
+        self.test_names = iter(tests)
+    
     def move_ball(self):
-        if self.master.answer == True:
-            self.cycles = 0
-            self.master.answer = False
-            return
-
-        # get current x&y of ball
-        self.coords = self.canvas.coords(self.ball)[0], self.canvas.coords(self.ball)[1]
-        self.canvas.update_idletasks()
+        try:
+            self.current_test = next(self.test_names)
+            self.time_ref = time()
+            self.draw()
+        except StopIteration:
+            self.test_names = []
+            self.master.routine_finished()
         
-        if self.testName == "Smooth_Horizontal" or self.testName == "Smooth_Vertical":
-            if self.coords[0]+self.size >= self.canvas.winfo_width() or self.coords[0] <= 0:
-                self.xDelta *= -1
-                self.cycles += 1
+        self.canvas.after(routine_duration * 1000, self.move_ball)
 
-            if self.coords[1]+self.size >= self.canvas.winfo_height() or self.coords[1] <= 0:
-                self.yDelta *= -1
-                self.cycles += 1
-            
-            # Move ball
-            self.canvas.move(self.ball, self.xDelta, self.yDelta)
+    def draw(self):
+        x, y = self.get_coords(self.current_test, time())
+        self.canvas.moveto(self.ball, x, y)
+
+        if time() - self.time_ref < routine_duration:
+            self.canvas.after(refresh_rate, self.draw)
+        else:
+            self.canvas.moveto(self.ball, self.master.width / 2, self.master.height / 2)
         
-        elif self.testName == "Smooth_Circle":
-            if self.theta + self.xDelta >= (self.cycles + 1)*2*pi:
-                self.cycles += 1
+    def get_coords(self, test, t):
+        match test:
+            case "Vertical_Saccade":
+                f = self.vertical_saccade()
+            case "Horizontal_Saccade":
+                f = self.horizontal_saccade()
+            case "Smooth_Vertical":
+                f = self.smooth_vertical()
+            case "Smooth_Horizontal":
+                f = self.smooth_horizontal()
+            case "Smooth_Circle":
+                f = self.smooth_circle()
 
-            # Move ball
-            self.theta += self.xDelta
-            self.canvas.moveto(self.ball, self.master.width/2 + self.radius*cos(self.theta + self.xDelta), self.master.height/2 + self.radius*sin(self.theta + self.xDelta))
+        x = self.master.width / 2 + self.master.height*(f(t)[0]/2) - self.size / 2
+        y = self.master.height*(1/2 + f(t)[1]/2) - self.size / 2
+        
+        return x, y 
 
-        elif self.testName == "Horizontal_Saccade":
-            self.cycles += 1
-            if self.cycles % 2 == 0:
-                self.canvas.itemconfig(self.ball, fill="green")
-                self.canvas.itemconfig(self.additionalBall, fill="white")
-            else:
-                self.canvas.itemconfig(self.ball, fill="white")
-                self.canvas.itemconfig(self.additionalBall, fill="green")
-            
-        elif self.testName == "Vertical_Saccade":
-            self.cycles += 1
-            if self.cycles % 2 == 0:
-                self.canvas.itemconfig(self.ball, fill="green")
-                self.canvas.itemconfig(self.additionalBall, fill="white")
-            else:
-                self.canvas.itemconfig(self.ball, fill="white")
-                self.canvas.itemconfig(self.additionalBall, fill="green")
+    def vertical_saccade(self):
+        return lambda t: (0, (int(frequency * t * 2) % 2 == 0) * 1.25 - 0.75)
 
-        if self.cycles >= self.duration: # or (how to exit saccade tests)
-            self.cycles = 0
-            self.master.activeButtons[self.testName] = False
-            self.master.test_routine()
-            return
+    def horizontal_saccade(self):
+        return lambda t: ((int(frequency * t * 2) % 2 == 0) * 1.25 - 0.75, 0)
 
-        self.canvas.after(self.cycleTime, self.move_ball)
+    def smooth_vertical(self):
+        return lambda t: (0, 0.75 * cos(2 * pi * frequency * t))
 
-    def set_test(self, testName):
-        self.testName = testName
-        self.canvas.itemconfig(self.additionalBall, fill="black")
-        self.canvas.itemconfig(self.ball, fill="white")
-        self.canvas.moveto(self.additionalBall, 0, 0)
+    def smooth_horizontal(self):
+        return lambda t: (0.75 * cos(2 * pi * frequency * t), 0)
 
-        if testName == "Smooth_Horizontal":
-            self.xDelta = 5
-            self.yDelta = 0
-            self.cycleTime = 5
-            self.duration = 2
-            self.canvas.moveto(self.ball, self.master.width/2, self.master.height/2)
+    def smooth_circle(self):
+        return lambda t: (0.75 * sin(2 * pi * frequency * t), 0.75 * cos(2 * pi * frequency * t))
 
-        elif testName == "Smooth_Vertical":
-            self.xDelta = 0
-            self.yDelta = 5
-            self.cycleTime = 5
-            self.duration = 2
-            self.canvas.moveto(self.ball, self.master.width/2, self.master.height/2)
-
-        elif testName == "Smooth_Circle":
-            self.xDelta = 0.01
-            self.radius = self.master.height / 2.16
-            self.theta = 0
-            self.cycleTime = 5
-            self.duration = 2
-            self.canvas.moveto(self.ball, self.master.width/2, self.master.height/2)
-
-        elif testName == "Horizontal_Saccade":
-            self.cycleTime = 1500
-            self.duration = 10
-            self.canvas.moveto(self.ball, self.master.width/5, self.master.height/2)
-            self.canvas.moveto(self.additionalBall, 4*self.master.width/5, self.master.height/2)
-            self.canvas.itemconfig(self.additionalBall, fill="white")
-
-        elif testName == "Vertical_Saccade":
-            self.cycleTime = 1500
-            self.duration = 10
-            self.canvas.moveto(self.ball, self.master.width/2, self.master.height/8)
-            self.canvas.moveto(self.additionalBall, self.master.width/2, 7*self.master.height/8)
-            self.canvas.itemconfig(self.additionalBall, fill="white")
+    
