@@ -125,10 +125,10 @@ class Ball_Object:
         return x, y 
 
     def vertical_saccade(self):
-        return lambda t: (0, (int(frequency * t * 2) % 2 == 0) * 1.25 - 0.75)
+        return lambda t: (0, (int(frequency * t * 2) % 2 == 0) * 1.5 - 0.75)
 
     def horizontal_saccade(self):
-        return lambda t: ((int(frequency * t * 2) % 2 == 0) * 1.25 - 0.75, 0)
+        return lambda t: ((int(frequency * t * 2) % 2 == 0) * 1.5 - 0.75, 0)
 
     def smooth_vertical(self):
         return lambda t: (0, 0.75 * cos(2 * pi * frequency * t))
