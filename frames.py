@@ -60,29 +60,27 @@ class Home_Screen(tk.Frame):
         self.controller.activate_button(button_name)            
 
         if self.controller.activeButtons[button_name] is True:
-            match button_name:
-                case "Vertical_Saccade":
-                    self.VS_b.configure(bg="#adffab")
-                case "Horizontal_Saccade":
-                    self.HS_b.configure(bg="#adffab")
-                case "Smooth_Circle":
-                    self.SC_b.configure(bg="#adffab")
-                case "Smooth_Vertical":
-                    self.SV_b.configure(bg="#adffab")
-                case "Smooth_Horizontal":
-                    self.SH_b.configure(bg="#adffab")
+            if button_name =="Vertical_Saccade":
+                self.VS_b.configure(bg="#adffab")
+            elif button_name == "Horizontal_Saccade":
+                self.HS_b.configure(bg="#adffab")
+            elif button_name == "Smooth_Circle":
+                self.SC_b.configure(bg="#adffab")
+            elif button_name == "Smooth_Vertical":
+                self.SV_b.configure(bg="#adffab")
+            elif button_name == "Smooth_Horizontal":
+                self.SH_b.configure(bg="#adffab")
         else:
-            match button_name:
-                case "Vertical_Saccade":
-                    self.VS_b.configure(bg="white")
-                case "Horizontal_Saccade":
-                    self.HS_b.configure(bg="white")
-                case "Smooth_Circle":
-                    self.SC_b.configure(bg="white")
-                case "Smooth_Vertical":
-                    self.SV_b.configure(bg="white")
-                case "Smooth_Horizontal":
-                    self.SH_b.configure(bg="white")
+            if button_name == "Vertical_Saccade":
+                self.VS_b.configure(bg="white")
+            elif button_name == "Horizontal_Saccade":
+                self.HS_b.configure(bg="white")
+            elif button_name == "Smooth_Circle":
+                self.SC_b.configure(bg="white")
+            elif button_name == "Smooth_Vertical":
+                self.SV_b.configure(bg="white")
+            elif button_name == "Smooth_Horizontal":
+                self.SH_b.configure(bg="white")
 
         self.start_b.configure(state="disabled", bg="#eee")
 

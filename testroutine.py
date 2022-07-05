@@ -10,6 +10,8 @@ from enum import Enum, auto
 from math import pi, sin, cos
 from time import time, time_ns
 
+# TODO: Hide mouse
+
 # Constants to control behaviour of the tests
 routine_duration    = 15      # s
 frequency           = 0.4     # Hz
@@ -127,17 +129,16 @@ class Test_Routine:
         test: test_name
         t: time
         '''
-        match test:
-            case "Vertical_Saccade":
-                f = self.vertical_saccade()
-            case "Horizontal_Saccade":
-                f = self.horizontal_saccade()
-            case "Smooth_Vertical":
-                f = self.smooth_vertical()
-            case "Smooth_Horizontal":
-                f = self.smooth_horizontal()
-            case "Smooth_Circle":
-                f = self.smooth_circle()
+        if test == "Vertical_Saccade":
+            f = self.vertical_saccade()
+        elif test == "Horizontal_Saccade":
+            f = self.horizontal_saccade()
+        elif test == "Smooth_Vertical":
+            f = self.smooth_vertical()
+        elif test == "Smooth_Horizontal":
+            f = self.smooth_horizontal()
+        elif test == "Smooth_Circle":
+            f = self.smooth_circle()
 
         x = self.master.width / 2 + self.master.height*(f(t)[0]/2) - self.ball_radius / 2
         y = self.master.height*(1/2 + f(t)[1]/2) - self.ball_radius / 2

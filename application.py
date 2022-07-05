@@ -130,8 +130,6 @@ class Application(tk.Tk):
                 self.frame.tkraise()
                 self.config(cursor="arrow")
 
-                self.ball.cancel()
-
                 self.reset_buttons()
 
             self.current_frame = self.CURRENT_FRAME.HOME
