@@ -10,6 +10,7 @@ from enum import Enum, auto
 from math import pi, sin, cos
 from time import time, time_ns
 
+# Constants to control behaviour of the tests
 routine_duration    = 15      # s
 frequency           = 0.4     # Hz
 draw_refresh_rate   = 10      # ms
@@ -17,18 +18,24 @@ countdown_duration  = 3       # s
 state_machine_cycle = 100     # ms
 
 class Routine_State(Enum):
+    '''
+    Enum class for state of Ball object
+    '''
     countdown   = auto()
     update_test = auto()
     drawing     = auto()
     idle        = auto()
 
-class Ball_Object: 
-    def __init__(self, master, canvas, size):
+class Test_Routine:
+    '''
+    Class that handles all eye-test routine related activity
+    ''' 
+    def __init__(self, master, canvas):
         self.master = master
         self.canvas: tk.Canvas = canvas
 
-        # Initialize the ball
-        self.ball_radius = size
+        # Initialize the ball (oval) shape
+        self.ball_radius = 50
         self.ball = self.canvas.create_oval(0, 0, self.ball_radius, self.ball_radius, fill="white")
         self.canvas.itemconfig(self.ball, state='hidden')
 
@@ -45,15 +52,17 @@ class Ball_Object:
         self.start_drawing = 0
         self.drawing_finished = 0
 
+        # Call 'main loop' of the class
         self.move_ball()
     
     def move_ball(self):
+        '''
+        Main loop for the class. Handles and transitions main state machine
+        '''
         if self.state == Routine_State.update_test:
             self.current_test = next(self.test_names, "Done")
             if self.current_test == "Done":
                 self.master.routine_finished()
-                self.state = Routine_State.idle
-                self.test_names = []
                 self.cancel()
             else:
                 self.time_ref = time()
@@ -83,6 +92,9 @@ class Ball_Object:
         self.move_ball_ref = self.canvas.after(state_machine_cycle, self.move_ball)
         
     def draw(self):
+        '''
+        Draws/moves the ball (oval) on the screen
+        '''
         t = time_ns()/1e9 - self.time_ref
         x, y = self.get_coords(self.current_test, t)
         self.canvas.moveto(self.ball, x, y)
@@ -95,6 +107,9 @@ class Ball_Object:
             self.canvas.itemconfig(self.ball, state='hidden')
 
     def update_countdown(self):
+        '''
+        A function called to provide a countdown on the screen (prior to a test)
+        '''
         self.canvas.itemconfig(self.countdown_text, text=self.count,state='normal')
         
         if time() - self.time_ref >= 1:  
@@ -104,9 +119,14 @@ class Ball_Object:
         if self.count <= -1:
             self.start_countdown = 0
             self.canvas.itemconfig(self.countdown_text,state='hidden')
-            self.count = 5
+            self.count = countdown_duration
         
     def get_coords(self, test, t):
+        '''
+        Prescribes the coordinates of where the ball (oval) should be drawn according to test as a function of time
+        test: test_name
+        t: time
+        '''
         match test:
             case "Vertical_Saccade":
                 f = self.vertical_saccade()

@@ -13,8 +13,8 @@ from tkinter.messagebox import *
 import ctypes
 
 # Project Imports
-from ball import Ball_Object, Routine_State
-from frames import Home_Screen, Main_Canvas
+from testroutine import Test_Routine, Routine_State
+from frames import Home_Screen, Test_Routine_Canvas
 
 # Set resolution for screen
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
@@ -23,7 +23,7 @@ class Application(tk.Tk):
 
     class CURRENT_FRAME(Enum):
         HOME      = 1
-        MAIN      = 2
+        EYE_TEST  = 2
         COUNTDOWN = 3
     
     def __init__(self, *args, **kwargs):
@@ -46,11 +46,11 @@ class Application(tk.Tk):
         # Create an instance of the Home Screen frame
         self.frame = Home_Screen(master=self.container, controller=self)
 
-        # Create an instance of the Main Canvas
-        self.main_canvas = Main_Canvas(master=self.container, controller=self)
+        # Create an instance of the test routine canvas
+        self.test_routine_canvas = Test_Routine_Canvas(master=self.container, controller=self)
 
-        # Create an instance of the moving ball
-        self.ball = Ball_Object(self, self.main_canvas, size=50)
+        # Create an instance of the test routine canvas
+        self.ball = Test_Routine(self, self.test_routine_canvas)
 
         self.show_home()
 
@@ -104,7 +104,7 @@ class Application(tk.Tk):
     
     def show_canvas(self, canvas: tk.Canvas, current_frame: CURRENT_FRAME):
         '''
-        Raise the Main Canvas to the top of the stack and start test routine
+        Raise the Test Routine Canvas to the top of the stack and start test routine
         '''
         canvas.place(relx=0.5, rely=0.5, anchor=CENTER)
         tk.Misc.lift(canvas)
@@ -123,7 +123,7 @@ class Application(tk.Tk):
         '''
         End a vision test routine prematurely
         '''
-        if self.current_frame == self.CURRENT_FRAME.MAIN:
+        if self.current_frame == self.CURRENT_FRAME.EYE_TEST:
             answer = askyesno(title='Quit Routine',
                     message='Are you sure you want to quit?')
             if answer:
@@ -178,8 +178,8 @@ class Application(tk.Tk):
         '''
         Create the array of routines selected for the current sequence of vision tests
         '''
-        # Display the Main_Canvas 
-        self.show_canvas(self.main_canvas, self.CURRENT_FRAME.MAIN)
+        # Display the test routine canvas 
+        self.show_canvas(self.test_routine_canvas, self.CURRENT_FRAME.EYE_TEST)
 
         # Add the selected test options to a list
         tests = []

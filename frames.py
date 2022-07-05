@@ -99,7 +99,7 @@ class Home_Screen(tk.Frame):
         self.SH_b.configure(bg="white")
         self.start_b.configure(state="disabled", bg="#eee")
 
-class Main_Canvas(tk.Canvas):
+class Test_Routine_Canvas(tk.Canvas):
     '''
     Class to represent the "Main Canvas" of the application. Hosts the ball
     '''
