@@ -13,7 +13,7 @@ from tkinter.messagebox import *
 import ctypes
 
 # Project Imports
-from ball import Ball_Object
+from ball import Ball_Object, Routine_State
 from frames import Home_Screen, Main_Canvas
 
 # Set resolution for screen
@@ -41,7 +41,7 @@ class Application(tk.Tk):
 
         # Create the prompt button array
         self.activeButtons = {"Vertical_Saccade" : False, "Horizontal_Saccade" : False, "Smooth_Circle" : False,
-                            "Smooth_Vertical" : False, "Smooth_Horizontal" : False}
+                              "Smooth_Vertical" : False, "Smooth_Horizontal" : False}
 
         # Create an instance of the Home Screen frame
         self.frame = Home_Screen(master=self.container, controller=self)
@@ -50,7 +50,7 @@ class Application(tk.Tk):
         self.main_canvas = Main_Canvas(master=self.container, controller=self)
 
         # Create an instance of the moving ball
-        self.ball = Ball_Object(self, self.main_canvas, size=35)
+        self.ball = Ball_Object(self, self.main_canvas, size=50)
 
         self.show_home()
 
@@ -187,9 +187,9 @@ class Application(tk.Tk):
             if item is True:
                 tests.append(key)
         
-        # Pass the list to the Ball_Object
+        # Pass the list to the Ball_Object and update ball state
         self.ball.test_names = iter(tests)
-        self.ball.run_tests()
+        self.ball.state = Routine_State.update_test
 
 if __name__ == '__main__':
     app = Application()

@@ -5,63 +5,104 @@ Gian Favero and Steven Caro
 2022
 '''
 
-from math import pi, sin, cos
-from time import time
 import tkinter as tk
+from enum import Enum, auto
+from math import pi, sin, cos
+from time import time, time_ns
 
-routine_duration = 15      # s
-refresh_rate     = 1       # ms
-frequency        = 0.5     # Hz
+routine_duration    = 15      # s
+frequency           = 0.4     # Hz
+draw_refresh_rate   = 10      # ms
+countdown_duration  = 3       # s
+state_machine_cycle = 100     # ms
+
+class Routine_State(Enum):
+    countdown   = auto()
+    update_test = auto()
+    drawing     = auto()
+    idle        = auto()
 
 class Ball_Object: 
     def __init__(self, master, canvas, size):
         self.master = master
         self.canvas: tk.Canvas = canvas
-        self.size = size
-        self.ball = self.canvas.create_oval(0, 0, self.size, self.size, fill="white")
 
-        # Initialize the countdown items
-        self.count = 5
+        # Initialize the ball
+        self.ball_radius = size
+        self.ball = self.canvas.create_oval(0, 0, self.ball_radius, self.ball_radius, fill="white")
+        self.canvas.itemconfig(self.ball, state='hidden')
+
+        # Initialize the countdown text items
+        self.count = countdown_duration
         self.countdown_text = self.canvas.create_text(self.master.width/2, self.master.height/2, text=self.count, 
                                                       font=("Arial", 50, "bold"), fill="white")
         self.canvas.itemconfig(self.countdown_text, state='hidden')
 
-    def run_tests(self):
-        self.start_countdown()
+        # Initialize the state machine variables
+        self.state = Routine_State.idle
+        self.current_test = None
+        self.start_countdown = 0
+        self.start_drawing = 0
+        self.drawing_finished = 0
+
         self.move_ball()
     
     def move_ball(self):
-        if self.countdown_complete:
-            try:
-                self.current_test = next(self.test_names)
-                self.time_ref = time()
-                self.draw()
-            except StopIteration:
+        if self.state == Routine_State.update_test:
+            self.current_test = next(self.test_names, "Done")
+            if self.current_test == "Done":
+                self.master.routine_finished()
+                self.state = Routine_State.idle
                 self.test_names = []
                 self.cancel()
-                self.master.routine_finished()
-        
-        self.move_ball_ref = self.canvas.after((routine_duration + 5) * 1000, self.move_ball)
+            else:
+                self.time_ref = time()
+                self.start_countdown = 1
+                self.state = Routine_State.countdown
 
+        elif self.state == Routine_State.countdown:
+            if self.start_countdown:
+                self.update_countdown()
+            else:
+                self.start_drawing = 1
+                self.state = Routine_State.drawing
+
+        elif self.state == Routine_State.drawing:
+            if self.start_drawing:
+                self.start_drawing = 0
+                self.time_ref = time()
+                self.canvas.itemconfig(self.ball, state='normal')
+                self.draw()
+            elif not self.start_drawing and self.drawing_finished:
+                self.drawing_finished = 0
+                self.state = Routine_State.update_test
+
+        elif self.state == Routine_State.idle:
+            pass
+
+        self.move_ball_ref = self.canvas.after(state_machine_cycle, self.move_ball)
+        
     def draw(self):
-        t = time() - self.time_ref
+        t = time_ns()/1e9 - self.time_ref
         x, y = self.get_coords(self.current_test, t)
         self.canvas.moveto(self.ball, x, y)
 
-        if t < routine_duration + 5:
-            self.draw_ref = self.canvas.after(refresh_rate, self.draw)
+        if t < routine_duration:
+            self.draw_ref = self.canvas.after(draw_refresh_rate, self.draw)
         else:
-            self.canvas.moveto(self.ball, self.master.width / 2, self.master.height / 2)
+            self.drawing_finished = 1
+            self.canvas.moveto(self.ball, 0, 0)
+            self.canvas.itemconfig(self.ball, state='hidden')
 
-    def start_countdown(self):
+    def update_countdown(self):
         self.canvas.itemconfig(self.countdown_text, text=self.count,state='normal')
-        self.count -= 1
+        
+        if time() - self.time_ref >= 1:  
+            self.count -= 1
+            self.time_ref = time()
 
-        if self.count > -1:
-            self.countdown_complete = False
-            self.canvas.after(1 * 1000, self.start_countdown)
-        else:
-            self.countdown_complete = True            
+        if self.count <= -1:
+            self.start_countdown = 0
             self.canvas.itemconfig(self.countdown_text,state='hidden')
             self.count = 5
         
@@ -78,17 +119,10 @@ class Ball_Object:
             case "Smooth_Circle":
                 f = self.smooth_circle()
 
-        x = self.master.width / 2 + self.master.height*(f(t)[0]/2) - self.size / 2
-        y = self.master.height*(1/2 + f(t)[1]/2) - self.size / 2
+        x = self.master.width / 2 + self.master.height*(f(t)[0]/2) - self.ball_radius / 2
+        y = self.master.height*(1/2 + f(t)[1]/2) - self.ball_radius / 2
         
         return x, y 
-
-    def cancel(self):
-        '''
-        Cancel all test routines being run
-        '''
-        self.canvas.after_cancel(self.move_ball_ref)
-        self.canvas.after_cancel(self.draw_ref)
 
     def vertical_saccade(self):
         return lambda t: (0, (int(frequency * t * 2) % 2 == 0) * 1.25 - 0.75)
@@ -105,4 +139,22 @@ class Ball_Object:
     def smooth_circle(self):
         return lambda t: (0.75 * sin(2 * pi * frequency * t), 0.75 * cos(2 * pi * frequency * t))
 
+    def cancel(self):
+        '''
+        Cancel all test routines being run and reset variables
+        '''
+        try:
+            self.draw_ref = self.canvas.after_cancel(self.draw_ref)
+        except:
+            pass
+
+        self.canvas.itemconfig(self.ball, state='hidden')
+        self.canvas.itemconfig(self.countdown_text, state='hidden')
+
+        self.state = Routine_State.idle
+        self.current_test = None
+        self.count = countdown_duration
+        self.start_countdown = 0
+        self.start_drawing = 0
+        self.drawing_finished = 0
     
