@@ -16,12 +16,11 @@ import pandas as pd
 
 # Constants to control behaviour of the tests
 routine_duration_freq    = {
-    "Vertical_Saccade": {"Duration": 5, "Frequency": 0.4},
-    "Horizontal_Saccade": {"Duration": 5, "Frequency": 0.4},
+    "Vertical_Saccade": {"Duration": 10, "Frequency": 0.4},
+    "Horizontal_Saccade": {"Duration": 10, "Frequency": 0.4},
     "Smooth_Circle": {"Duration": 16, "Frequency": 6.5/16},
     "Smooth_Vertical": {"Duration": 22.5, "Frequency": 6.25/22.5},
-    "Smooth_Horizontal": {"Duration": 27, "Frequency": 1/12},}
-
+    "Smooth_Horizontal": {"Duration": 27, "Frequency": 1/12},}      # s, Hz ball position update increment
 draw_refresh_rate   = 10      # ms
 countdown_duration  = 3       # s
 state_machine_cycle = 100     # ms
@@ -46,20 +45,16 @@ class Test_Routine:
         self.collect_data = False####################################################
         if self.collect_data:
             self.tracker = EyeTracker()
-            self.tracker.show_calibration()
-            self.tracker.clear_calibration()
-            self.tracker.start_calibration()
 
         # Initialize the ball (oval) shape
         self.ball_radius = 50
         self.ball = self.canvas.create_oval(0, 0, self.ball_radius, self.ball_radius, fill="white")
         self.canvas.itemconfig(self.ball, state='hidden')
-        print(self.canvas.itemconfig(self.ball))
 
         # Initialize the countdown text items
         self.count = countdown_duration
         self.countdown_text = self.canvas.create_text(self.master.width/2, self.master.height/2, text=self.count, 
-                                                      font=("Arial", 50, "bold"), fill="white")
+                                                      font=("Arial", 50, "bold"), justify='center', fill="white")
         self.canvas.itemconfig(self.countdown_text, state='hidden')
 
         # Initialize the state machine variables
@@ -125,8 +120,9 @@ class Test_Routine:
         Draws/moves the ball on the screen
         '''
         t = time_ns()/1e9 - self.time_ref
-        x, y = self.get_coords(self.current_test, t)
-        self.canvas.moveto(self.ball, x, y)
+        x_cen, y_cen = self.get_coords(self.current_test, t)
+        #self.canvas.moveto(self.ball, x_cen - self.ball_radius/2, y_cen - self.ball_radius/2)
+        self.canvas.moveto(self.ball, x_cen, y_cen)
 
         if self.collect_data:
             try:
@@ -145,8 +141,9 @@ class Test_Routine:
         A function called to provide a countdown on the screen (prior to a test)
         '''
         self.canvas.itemconfig(self.countdown_text, text=f'{self.count}\nFollow the dot',state='normal')
-        #self.canvas.itemconfig(self.ball, state='normal')
-        self.canvas.itemconfig(self.ball, width=(3-self.count)*4)
+        radius = 50 - (40/3)*(3-self.count)
+        x_cen, y_cen = self.get_coords(self.current_test, 0)
+        self.canvas.coords(self.ball, x_cen-radius/2, y_cen-radius/2, x_cen+radius/2, y_cen+radius/2)
         
         if time() - self.time_ref >= 1:  
             self.count -= 1
@@ -174,19 +171,19 @@ class Test_Routine:
         elif test == "Smooth_Circle":
             f = self.smooth_circle()
 
-        x = self.master.width / 2 + self.master.height*(f(t)[0]/2) - self.ball_radius / 2
-        y = self.master.height*(1/2 + f(t)[1]/2) - self.ball_radius / 2
+        x_cen = self.master.width / 2 + self.master.height*(f(t)[0]/2)
+        y_cen = self.master.height*(1/2 + f(t)[1]/2)
         
-        return x, y 
+        return x_cen, y_cen 
 
     def vertical_saccade(self):
         return lambda t: (0, (int(routine_duration_freq["Vertical_Saccade"]["Frequency"] * t * 2) % 2 == 0) * 1.5 - 0.75)
 
     def horizontal_saccade(self):
-        return lambda t: ((int(routine_duration_freq["Horizontal_Saccade"]["Frequency"] * t * 2) % 2 == 0) * 1.5 - 0.75, 0)
+        return lambda t: ((int(routine_duration_freq["Horizontal_Saccade"]["Frequency"] * t * 2) % 2 == 0) * 3 - 1.5, 0)
 
     def smooth_vertical(self):
-        return lambda t: (0, 1 * cos(2 * pi * routine_duration_freq["Smooth_Vertical"]["Frequency"] * t))
+        return lambda t: (0, 0.95 * cos(2 * pi * routine_duration_freq["Smooth_Vertical"]["Frequency"] * t))
 
     def smooth_horizontal(self):
         return lambda t: (1.5 * cos(2 * pi * routine_duration_freq["Smooth_Horizontal"]["Frequency"] * t), 0)
