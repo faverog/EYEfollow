@@ -21,6 +21,7 @@ routine_duration_freq    = {
     "Smooth_Circle": {"Duration": 16, "Frequency": 6.5/16},
     "Smooth_Vertical": {"Duration": 22.5, "Frequency": 6.25/22.5},
     "Smooth_Horizontal": {"Duration": 27, "Frequency": 1/12},}      # s, Hz ball position update increment
+
 draw_refresh_rate   = 10      # ms
 countdown_duration  = 3       # s
 state_machine_cycle = 100     # ms
@@ -42,12 +43,12 @@ class Test_Routine:
         self.master = master
         self.canvas: tk.Canvas = canvas
 
-        self.collect_data = False####################################################
+        self.collect_data = True
         if self.collect_data:
             self.tracker = EyeTracker()
 
         # Initialize the ball (oval) shape
-        self.ball_radius = 50
+        self.ball_radius = 12
         self.ball = self.canvas.create_oval(0, 0, self.ball_radius, self.ball_radius, fill="white")
         self.canvas.itemconfig(self.ball, state='hidden')
 
@@ -64,7 +65,7 @@ class Test_Routine:
         self.start_drawing = 0
         self.drawing_finished = 0
 
-        # Pandas
+        # Pandas data frame
         self.dfs = {}
 
         # Call 'main loop' of the class
@@ -83,11 +84,6 @@ class Test_Routine:
                 self.time_ref = time()
                 self.start_countdown = 1
                 self.state = Routine_State.countdown
-
-                # Initialize position of ball
-                x, y = self.get_coords(self.current_test, 0)
-                self.canvas.moveto(self.ball, x, y)
-                self.canvas.itemconfig(self.ball, state="normal")
 
         elif self.state == Routine_State.countdown:
             if self.start_countdown:
@@ -121,8 +117,7 @@ class Test_Routine:
         '''
         t = time_ns()/1e9 - self.time_ref
         x_cen, y_cen = self.get_coords(self.current_test, t)
-        #self.canvas.moveto(self.ball, x_cen - self.ball_radius/2, y_cen - self.ball_radius/2)
-        self.canvas.moveto(self.ball, x_cen, y_cen)
+        self.canvas.moveto(self.ball, x_cen - self.ball_radius/2, y_cen - self.ball_radius/2)
 
         if self.collect_data:
             try:
@@ -134,6 +129,7 @@ class Test_Routine:
         if t < routine_duration_freq[self.current_test]["Duration"]:
             self.draw_ref = self.canvas.after(draw_refresh_rate, self.draw)
         else:
+            self.canvas.itemconfig(self.ball, state="hidden")
             self.drawing_finished = 1
 
     def update_countdown(self):
@@ -141,7 +137,9 @@ class Test_Routine:
         A function called to provide a countdown on the screen (prior to a test)
         '''
         self.canvas.itemconfig(self.countdown_text, text=f'{self.count}\nFollow the dot',state='normal')
-        radius = 50 - (40/3)*(3-self.count)
+        self.canvas.itemconfig(self.ball, state="normal")
+
+        radius = 50 - ((50 - self.ball_radius)/3)*(3-self.count)
         x_cen, y_cen = self.get_coords(self.current_test, 0)
         self.canvas.coords(self.ball, x_cen-radius/2, y_cen-radius/2, x_cen+radius/2, y_cen+radius/2)
         
@@ -219,6 +217,7 @@ class Test_Routine:
             sleep(1e-2)
             if self.tracker.read_msg_async() is None:
                 break
+
         self.tracker_data = self.serialize_tracker_data(self.tracker_data)
         self.dfs[self.current_test]=pd.DataFrame(self.tracker_data)
 
@@ -232,6 +231,7 @@ class Test_Routine:
             pass
 
         self.canvas.itemconfig(self.countdown_text, state='hidden')
+        self.canvas.itemconfig(self.ball, state="hidden")
 
         self.state = Routine_State.idle
         self.current_test = None
@@ -273,5 +273,6 @@ class Test_Routine:
                             result[key].append(float(contents[2][key]) if key in contents[2] else '')
             except:
                 print(contents) # TODO get to the bottom of this (if program gets here, no data is written)
+                
         return result
 
