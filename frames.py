@@ -6,6 +6,7 @@ December 2022
 '''
 
 import tkinter as tk
+from PIL import Image, ImageTk
 from tkinter.messagebox import *
 
 class Home_Screen(tk.Frame):
@@ -34,21 +35,29 @@ class Home_Screen(tk.Frame):
         self.start_b = tk.Button(self, text = 'START', bg = "#eee", state="disabled", height=5, width=20, 
                               command=lambda:self.controller.create_test_routine())
 
+        # Place logo png
+        logo_image = Image.open("Logo.png")
+        logo_photo_image = ImageTk.PhotoImage(logo_image)
+        logo_label = tk.Label(self, image=logo_photo_image, bg="white")
+        logo_label.image = logo_photo_image
+
+        logo_label.grid(row=0, columnspan=20, pady=100)
+
         # Layout the test option buttons nicely in the frame
         self.VS_b.grid(row=1, column=2, padx=10)
         self.HS_b.grid(row=1, column=3, padx=10)
         self.SC_b.grid(row=1, column=4, padx=10)
         self.SV_b.grid(row=1, column=5, padx=10)
         self.SH_b.grid(row=1, column=6, padx=10)
-        self.start_b.grid(row=2, column=0, columnspan = 8, pady=75)
+        self.start_b.grid(row=3, column=0, columnspan = 8, pady=75)
 
     def configure_grid(self):
         '''
         Configure the grid and background colour of the Home Screen
         '''
         self.configure(bg="white")
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_rowconfigure(3, weight=1)
+        #self.grid_rowconfigure(0, weight=1)
+        #self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(7, weight=1)
         
