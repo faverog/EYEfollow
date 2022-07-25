@@ -28,11 +28,11 @@ routine_duration_freq = {
         },
     "Smooth_Vertical": {
         "Duration": 22.5,
-        "Frequency": 6.25/22.5
+        "Frequency": 3.25/22.5
         },
     "Smooth_Horizontal": {
         "Duration": 27,
-        "Frequency": 1/12
+        "Frequency": 2/27
         },
     }
 
