@@ -46,6 +46,7 @@ class Test_Routine:
         self.collect_data = False####################################################
         if self.collect_data:
             self.tracker = EyeTracker()
+            self.tracker.show_calibration()
             self.tracker.clear_calibration()
             self.tracker.start_calibration()
 
