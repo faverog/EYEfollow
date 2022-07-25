@@ -129,6 +129,7 @@ class Application(tk.Tk):
             if answer:
                 self.frame.tkraise()
                 self.config(cursor="arrow")
+                self.ball.cancel()
 
                 self.reset_buttons()
 

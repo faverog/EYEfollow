@@ -8,13 +8,20 @@ Gian Favero and Steven Caro
 import tkinter as tk
 from enum import Enum, auto
 from math import pi, sin, cos
-from time import time, time_ns
+from time import time, time_ns, sleep
+from open_gaze import EyeTracker
+import pandas as pd
 
 # TODO: Hide mouse
 
 # Constants to control behaviour of the tests
-routine_duration    = 15      # s
-frequency           = 0.4     # Hz
+routine_duration_freq    = {
+    "Vertical_Saccade": {"Duration": 10, "Frequency": 0.4},
+    "Horizontal_Saccade": {"Duration": 10, "Frequency": 0.4},
+    "Smooth_Circle": {"Duration": 16, "Frequency": 6.5/16},
+    "Smooth_Vertical": {"Duration": 22.5, "Frequency": 6.25/22.5},
+    "Smooth_Horizontal": {"Duration": 27, "Frequency": 1/12},}      # s, Hz ball position update increment
+
 draw_refresh_rate   = 10      # ms
 countdown_duration  = 3       # s
 state_machine_cycle = 100     # ms
@@ -36,15 +43,19 @@ class Test_Routine:
         self.master = master
         self.canvas: tk.Canvas = canvas
 
+        self.collect_data = True
+        if self.collect_data:
+            self.tracker = EyeTracker()
+
         # Initialize the ball (oval) shape
-        self.ball_radius = 50
+        self.ball_radius = 12
         self.ball = self.canvas.create_oval(0, 0, self.ball_radius, self.ball_radius, fill="white")
         self.canvas.itemconfig(self.ball, state='hidden')
 
         # Initialize the countdown text items
         self.count = countdown_duration
         self.countdown_text = self.canvas.create_text(self.master.width/2, self.master.height/2, text=self.count, 
-                                                      font=("Arial", 50, "bold"), fill="white")
+                                                      font=("Arial", 50, "bold"), justify='center', fill="white")
         self.canvas.itemconfig(self.countdown_text, state='hidden')
 
         # Initialize the state machine variables
@@ -53,6 +64,9 @@ class Test_Routine:
         self.start_countdown = 0
         self.start_drawing = 0
         self.drawing_finished = 0
+
+        # Pandas data frame
+        self.dfs = {}
 
         # Call 'main loop' of the class
         self.move_ball()
@@ -77,7 +91,9 @@ class Test_Routine:
             else:
                 self.start_drawing = 1
                 self.state = Routine_State.drawing
-
+                if self.collect_data:
+                    self.start_collection()
+                    
         elif self.state == Routine_State.drawing:
             if self.start_drawing:
                 self.start_drawing = 0
@@ -87,6 +103,8 @@ class Test_Routine:
             elif not self.start_drawing and self.drawing_finished:
                 self.drawing_finished = 0
                 self.state = Routine_State.update_test
+                if self.collect_data:
+                    self.stop_collection()
 
         elif self.state == Routine_State.idle:
             pass
@@ -95,24 +113,35 @@ class Test_Routine:
         
     def draw(self):
         '''
-        Draws/moves the ball (oval) on the screen
+        Draws/moves the ball on the screen
         '''
         t = time_ns()/1e9 - self.time_ref
-        x, y = self.get_coords(self.current_test, t)
-        self.canvas.moveto(self.ball, x, y)
+        x_cen, y_cen = self.get_coords(self.current_test, t)
+        self.canvas.moveto(self.ball, x_cen - self.ball_radius/2, y_cen - self.ball_radius/2)
 
-        if t < routine_duration:
+        if self.collect_data:
+            try:
+                while (msg := self.tracker.read_msg_async()) is not None:
+                    self.tracker_data.append((time(), *msg))
+            except:
+                pass
+
+        if t < routine_duration_freq[self.current_test]["Duration"]:
             self.draw_ref = self.canvas.after(draw_refresh_rate, self.draw)
         else:
+            self.canvas.itemconfig(self.ball, state="hidden")
             self.drawing_finished = 1
-            self.canvas.moveto(self.ball, 0, 0)
-            self.canvas.itemconfig(self.ball, state='hidden')
 
     def update_countdown(self):
         '''
         A function called to provide a countdown on the screen (prior to a test)
         '''
-        self.canvas.itemconfig(self.countdown_text, text=self.count,state='normal')
+        self.canvas.itemconfig(self.countdown_text, text=f'{self.count}\nFollow the dot',state='normal')
+        self.canvas.itemconfig(self.ball, state="normal")
+
+        radius = 50 - ((50 - self.ball_radius)/3)*(3-self.count)
+        x_cen, y_cen = self.get_coords(self.current_test, 0)
+        self.canvas.coords(self.ball, x_cen-radius/2, y_cen-radius/2, x_cen+radius/2, y_cen+radius/2)
         
         if time() - self.time_ref >= 1:  
             self.count -= 1
@@ -140,25 +169,57 @@ class Test_Routine:
         elif test == "Smooth_Circle":
             f = self.smooth_circle()
 
-        x = self.master.width / 2 + self.master.height*(f(t)[0]/2) - self.ball_radius / 2
-        y = self.master.height*(1/2 + f(t)[1]/2) - self.ball_radius / 2
+        x_cen = self.master.width / 2 + self.master.height*(f(t)[0]/2)
+        y_cen = self.master.height*(1/2 + f(t)[1]/2)
         
-        return x, y 
+        return x_cen, y_cen 
 
     def vertical_saccade(self):
-        return lambda t: (0, (int(frequency * t * 2) % 2 == 0) * 1.5 - 0.75)
+        return lambda t: (0, (int(routine_duration_freq["Vertical_Saccade"]["Frequency"] * t * 2) % 2 == 0) * 1.5 - 0.75)
 
     def horizontal_saccade(self):
-        return lambda t: ((int(frequency * t * 2) % 2 == 0) * 1.5 - 0.75, 0)
+        return lambda t: ((int(routine_duration_freq["Horizontal_Saccade"]["Frequency"] * t * 2) % 2 == 0) * 3 - 1.5, 0)
 
     def smooth_vertical(self):
-        return lambda t: (0, 0.75 * cos(2 * pi * frequency * t))
+        return lambda t: (0, 0.95 * cos(2 * pi * routine_duration_freq["Smooth_Vertical"]["Frequency"] * t))
 
     def smooth_horizontal(self):
-        return lambda t: (0.75 * cos(2 * pi * frequency * t), 0)
+        return lambda t: (1.5 * cos(2 * pi * routine_duration_freq["Smooth_Horizontal"]["Frequency"] * t), 0)
 
     def smooth_circle(self):
-        return lambda t: (0.75 * sin(2 * pi * frequency * t), 0.75 * cos(2 * pi * frequency * t))
+        return lambda t: (0.5 * sin(2 * pi * routine_duration_freq["Smooth_Circle"]["Frequency"] * t), 0.5 * cos(2 * pi * routine_duration_freq["Smooth_Circle"]["Frequency"] * t))
+
+    def start_collection(self):
+        try:
+            self.tracker_data = list[tuple[float, str, dict[str, str]]]()
+            self.tracker.send_data        = True
+            self.tracker.send_pupil_left  = True
+            self.tracker.send_pupil_right = True
+            self.tracker.send_pog_left    = True
+            self.tracker.send_pog_right   = True
+            self.tracker.send_time        = True
+        except:
+            print('FAILED TO START')
+            self.start_collection()
+    
+    def stop_collection(self):
+        try:
+            self.tracker.send_data        = False
+            self.tracker.send_pupil_left  = False
+            self.tracker.send_pupil_right = False
+            self.tracker.send_pog_left    = False
+            self.tracker.send_pog_right   = False
+            self.tracker.send_time        = False
+        except:
+            print("FAILED TO STOP")
+            self.stop_collection()
+        while True:
+            sleep(1e-2)
+            if self.tracker.read_msg_async() is None:
+                break
+
+        self.tracker_data = self.serialize_tracker_data(self.tracker_data)
+        self.dfs[self.current_test]=pd.DataFrame(self.tracker_data)
 
     def cancel(self):
         '''
@@ -169,8 +230,8 @@ class Test_Routine:
         except:
             pass
 
-        self.canvas.itemconfig(self.ball, state='hidden')
         self.canvas.itemconfig(self.countdown_text, state='hidden')
+        self.canvas.itemconfig(self.ball, state="hidden")
 
         self.state = Routine_State.idle
         self.current_test = None
@@ -178,4 +239,40 @@ class Test_Routine:
         self.start_countdown = 0
         self.start_drawing = 0
         self.drawing_finished = 0
+        
+        if self.collect_data:
+            self.exportData()
+
+    def exportData(self):
+        with pd.ExcelWriter("Test Results/Sample.xlsx") as writer:
+            for key in self.dfs.keys():
+                self.dfs[key].to_excel(writer, sheet_name=key)
     
+    def serialize_tracker_data(self, data: list[tuple[float, str, dict[str, str]]]) -> str:
+        result={}
+        for key in [
+                        "TIME",
+                        "LPOGX", "LPOGY", "LPOGV",  # Sent by send_pog_left
+                        "RPOGX", "RPOGY", "RPOGV",  # Sent by send_pog_right
+                        "LPCX", "LPCY", "LPD", "LPS", "LPV",  # Sent by send_pupil_left
+                        "RPCX", "RPCY", "RPD", "RPS", "RPV",  # Sent by send_pupil_right
+                        ]:
+                        result[key] = []
+
+        for contents in data:
+            try:
+                if 'REC' in contents and 'TIME' in contents[2].keys():
+                    for key in [
+                            "TIME",
+                            "LPOGX", "LPOGY", "LPOGV",  # Sent by send_pog_left
+                            "RPOGX", "RPOGY", "RPOGV",  # Sent by send_pog_right
+                            "LPCX", "LPCY", "LPD", "LPS", "LPV",  # Sent by send_pupil_left
+                            "RPCX", "RPCY", "RPD", "RPS", "RPV",  # Sent by send_pupil_right
+                            ]: 
+
+                            result[key].append(float(contents[2][key]) if key in contents[2] else '')
+            except:
+                print(contents) # TODO get to the bottom of this (if program gets here, no data is written)
+                
+        return result
+

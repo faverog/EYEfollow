@@ -5,6 +5,10 @@ __pycache__/
 # C extensions
 *.so
 
+# spreadsheets
+*.csv
+*.xlsx
+
 # Distribution / packaging
 bin/
 build/
