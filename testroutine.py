@@ -12,15 +12,29 @@ from time import time, time_ns, sleep
 from open_gaze import EyeTracker
 import pandas as pd
 
-# TODO: Hide mouse
-
 # Constants to control behaviour of the tests
-routine_duration_freq    = {
-    "Vertical_Saccade": {"Duration": 10, "Frequency": 0.4},
-    "Horizontal_Saccade": {"Duration": 10, "Frequency": 0.4},
-    "Smooth_Circle": {"Duration": 16, "Frequency": 6.5/16},
-    "Smooth_Vertical": {"Duration": 22.5, "Frequency": 6.25/22.5},
-    "Smooth_Horizontal": {"Duration": 27, "Frequency": 1/12},}      # s, Hz ball position update increment
+routine_duration_freq = {
+    "Vertical_Saccade": {
+        "Duration": 10,     # s
+        "Frequency": 1      # Hz
+        },
+    "Horizontal_Saccade": {
+        "Duration": 10, 
+        "Frequency": 1
+        },
+    "Smooth_Circle": {
+        "Duration": 16, 
+        "Frequency": 6.5/16
+        },
+    "Smooth_Vertical": {
+        "Duration": 22.5,
+        "Frequency": 6.25/22.5
+        },
+    "Smooth_Horizontal": {
+        "Duration": 27,
+        "Frequency": 1/12
+        },
+    }
 
 draw_refresh_rate   = 10      # ms
 countdown_duration  = 3       # s
@@ -139,7 +153,7 @@ class Test_Routine:
         self.canvas.itemconfig(self.countdown_text, text=f'{self.count}\nFollow the dot',state='normal')
         self.canvas.itemconfig(self.ball, state="normal")
 
-        radius = 50 - ((50 - self.ball_radius)/3)*(3-self.count)
+        radius = 50 - ((50 - self.ball_radius)/countdown_duration)*(countdown_duration-self.count)
         x_cen, y_cen = self.get_coords(self.current_test, 0)
         self.canvas.coords(self.ball, x_cen-radius/2, y_cen-radius/2, x_cen+radius/2, y_cen+radius/2)
         
@@ -198,6 +212,7 @@ class Test_Routine:
             self.tracker.send_pog_left    = True
             self.tracker.send_pog_right   = True
             self.tracker.send_time        = True
+            print(f"Started collecting data: {self.current_test}")
         except:
             print('FAILED TO START')
             self.start_collection()
@@ -210,6 +225,7 @@ class Test_Routine:
             self.tracker.send_pog_left    = False
             self.tracker.send_pog_right   = False
             self.tracker.send_time        = False
+            print(f"Finished collecting data: {self.current_test}")
         except:
             print("FAILED TO STOP")
             self.stop_collection()
@@ -239,9 +255,6 @@ class Test_Routine:
         self.start_countdown = 0
         self.start_drawing = 0
         self.drawing_finished = 0
-        
-        if self.collect_data:
-            self.exportData()
 
     def exportData(self):
         with pd.ExcelWriter("Test Results/Sample.xlsx") as writer:
