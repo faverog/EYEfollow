@@ -198,6 +198,7 @@ class Test_Routine:
             self.tracker.send_pog_left    = True
             self.tracker.send_pog_right   = True
             self.tracker.send_time        = True
+            print(f"Started collecting data: {self.current_test}")
         except:
             print('FAILED TO START')
             self.start_collection()
@@ -210,6 +211,7 @@ class Test_Routine:
             self.tracker.send_pog_left    = False
             self.tracker.send_pog_right   = False
             self.tracker.send_time        = False
+            print(f"Finished collecting data: {self.current_test}")
         except:
             print("FAILED TO STOP")
             self.stop_collection()
