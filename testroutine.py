@@ -20,8 +20,8 @@ routine_duration_freq    = {
     "Horizontal_Saccade": {"Duration": 5, "Frequency": 0.4},
     "Smooth_Circle": {"Duration": 16, "Frequency": 6.5/16},
     "Smooth_Vertical": {"Duration": 22.5, "Frequency": 6.25/22.5},
-    "Smooth_Horizontal": {"Duration": 27, "Frequency": 1/12},}      # s, Hz ball position update increment
-#frequency           = 0.4     # Hz ball position update increment
+    "Smooth_Horizontal": {"Duration": 27, "Frequency": 1/12},}
+
 draw_refresh_rate   = 10      # ms
 countdown_duration  = 3       # s
 state_machine_cycle = 100     # ms
@@ -46,6 +46,8 @@ class Test_Routine:
         self.collect_data = False####################################################
         if self.collect_data:
             self.tracker = EyeTracker()
+            self.tracker.clear_calibration()
+            self.tracker.start_calibration()
 
         # Initialize the ball (oval) shape
         self.ball_radius = 50
@@ -86,7 +88,8 @@ class Test_Routine:
                 self.start_countdown = 1
                 self.state = Routine_State.countdown
 
-                x, y = self.get_coords(self.current_test, 0) # Initialize position of ball
+                # Initialize position of ball
+                x, y = self.get_coords(self.current_test, 0)
                 self.canvas.moveto(self.ball, x, y)
                 self.canvas.itemconfig(self.ball, state="normal")
 
