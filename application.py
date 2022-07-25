@@ -177,6 +177,9 @@ class Application(tk.Tk):
         '''
         Create the array of routines selected for the current sequence of vision tests
         '''
+        # Hide mouse
+        self.config(cursor="none")
+
         # Display the test routine canvas 
         self.show_canvas(self.test_routine_canvas, self.CURRENT_FRAME.EYE_TEST)
 
