@@ -15,8 +15,13 @@ import pandas as pd
 # TODO: Hide mouse
 
 # Constants to control behaviour of the tests
-routine_duration    = 5      # s
-frequency           = 0.4     # Hz ball position update increment
+routine_duration_freq    = {
+    "Vertical_Saccade": {"Duration": 5, "Frequency": 0.4},
+    "Horizontal_Saccade": {"Duration": 5, "Frequency": 0.4},
+    "Smooth_Circle": {"Duration": 16, "Frequency": 6.5/16},
+    "Smooth_Vertical": {"Duration": 22.5, "Frequency": 6.25/22.5},
+    "Smooth_Horizontal": {"Duration": 27, "Frequency": 1/12},}      # s, Hz ball position update increment
+#frequency           = 0.4     # Hz ball position update increment
 draw_refresh_rate   = 10      # ms
 countdown_duration  = 3       # s
 state_machine_cycle = 100     # ms
@@ -38,7 +43,7 @@ class Test_Routine:
         self.master = master
         self.canvas: tk.Canvas = canvas
 
-        self.collect_data = True
+        self.collect_data = False####################################################
         if self.collect_data:
             self.tracker = EyeTracker()
 
@@ -46,6 +51,7 @@ class Test_Routine:
         self.ball_radius = 50
         self.ball = self.canvas.create_oval(0, 0, self.ball_radius, self.ball_radius, fill="white")
         self.canvas.itemconfig(self.ball, state='hidden')
+        print(self.canvas.itemconfig(self.ball))
 
         # Initialize the countdown text items
         self.count = countdown_duration
@@ -79,6 +85,10 @@ class Test_Routine:
                 self.time_ref = time()
                 self.start_countdown = 1
                 self.state = Routine_State.countdown
+
+                x, y = self.get_coords(self.current_test, 0) # Initialize position of ball
+                self.canvas.moveto(self.ball, x, y)
+                self.canvas.itemconfig(self.ball, state="normal")
 
         elif self.state == Routine_State.countdown:
             if self.start_countdown:
@@ -121,18 +131,18 @@ class Test_Routine:
             except:
                 pass
 
-        if t < routine_duration:
+        if t < routine_duration_freq[self.current_test]["Duration"]:
             self.draw_ref = self.canvas.after(draw_refresh_rate, self.draw)
         else:
             self.drawing_finished = 1
-            self.canvas.moveto(self.ball, 0, 0)
-            self.canvas.itemconfig(self.ball, state='hidden')
 
     def update_countdown(self):
         '''
         A function called to provide a countdown on the screen (prior to a test)
         '''
-        self.canvas.itemconfig(self.countdown_text, text=self.count,state='normal')
+        self.canvas.itemconfig(self.countdown_text, text=f'{self.count}\nFollow the dot',state='normal')
+        #self.canvas.itemconfig(self.ball, state='normal')
+        self.canvas.itemconfig(self.ball, width=(3-self.count)*4)
         
         if time() - self.time_ref >= 1:  
             self.count -= 1
@@ -166,19 +176,19 @@ class Test_Routine:
         return x, y 
 
     def vertical_saccade(self):
-        return lambda t: (0, (int(frequency * t * 2) % 2 == 0) * 1.5 - 0.75)
+        return lambda t: (0, (int(routine_duration_freq["Vertical_Saccade"]["Frequency"] * t * 2) % 2 == 0) * 1.5 - 0.75)
 
     def horizontal_saccade(self):
-        return lambda t: ((int(frequency * t * 2) % 2 == 0) * 1.5 - 0.75, 0)
+        return lambda t: ((int(routine_duration_freq["Horizontal_Saccade"]["Frequency"] * t * 2) % 2 == 0) * 1.5 - 0.75, 0)
 
     def smooth_vertical(self):
-        return lambda t: (0, 0.75 * cos(2 * pi * frequency * t))
+        return lambda t: (0, 1 * cos(2 * pi * routine_duration_freq["Smooth_Vertical"]["Frequency"] * t))
 
     def smooth_horizontal(self):
-        return lambda t: (0.75 * cos(2 * pi * frequency * t), 0)
+        return lambda t: (1.5 * cos(2 * pi * routine_duration_freq["Smooth_Horizontal"]["Frequency"] * t), 0)
 
     def smooth_circle(self):
-        return lambda t: (0.75 * sin(2 * pi * frequency * t), 0.75 * cos(2 * pi * frequency * t))
+        return lambda t: (0.5 * sin(2 * pi * routine_duration_freq["Smooth_Circle"]["Frequency"] * t), 0.5 * cos(2 * pi * routine_duration_freq["Smooth_Circle"]["Frequency"] * t))
 
     def start_collection(self):
         try:
@@ -220,7 +230,6 @@ class Test_Routine:
         except:
             pass
 
-        self.canvas.itemconfig(self.ball, state='hidden')
         self.canvas.itemconfig(self.countdown_text, state='hidden')
 
         self.state = Routine_State.idle
@@ -229,6 +238,7 @@ class Test_Routine:
         self.start_countdown = 0
         self.start_drawing = 0
         self.drawing_finished = 0
+        
         if self.collect_data:
             self.exportData()
 
