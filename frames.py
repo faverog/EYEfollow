@@ -115,4 +115,3 @@ class Test_Routine_Canvas(tk.Canvas):
         self.controller = controller
         self.config(height=controller.height, width=controller.width, bg="black")
 
-    

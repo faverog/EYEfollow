@@ -57,7 +57,7 @@ class Test_Routine:
         self.master = master
         self.canvas: tk.Canvas = canvas
 
-        self.collect_data = True
+        self.collect_data = False
         if self.collect_data:
             self.tracker = EyeTracker()
 
@@ -65,6 +65,9 @@ class Test_Routine:
         self.ball_radius = 12
         self.ball = self.canvas.create_oval(0, 0, self.ball_radius, self.ball_radius, fill="white")
         self.canvas.itemconfig(self.ball, state='hidden')
+
+        # Initialize Participant's Name
+        self.name = "Default Participant"
 
         # Initialize the countdown text items
         self.count = countdown_duration
@@ -257,7 +260,7 @@ class Test_Routine:
         self.drawing_finished = 0
 
     def exportData(self):
-        with pd.ExcelWriter("Test Results/Sample.xlsx") as writer:
+        with pd.ExcelWriter(f"Test Results/{self.name}.xlsx") as writer:
             for key in self.dfs.keys():
                 self.dfs[key].to_excel(writer, sheet_name=key)
     

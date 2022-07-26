@@ -7,9 +7,11 @@ December 2022
 
 # Python Imports
 from enum import Enum
+from time import sleep
 import tkinter as tk
 from tkinter.constants import CENTER
 from tkinter.messagebox import *
+from tkinter.simpledialog import askstring
 import ctypes
 
 # Project Imports
@@ -107,6 +109,7 @@ class Application(tk.Tk):
         Raise the Test Routine Canvas to the top of the stack and start test routine
         '''
         canvas.place(relx=0.5, rely=0.5, anchor=CENTER)
+        self.canvas = canvas
         tk.Misc.lift(canvas)
         self.current_frame = current_frame
         self.update_idletasks()
@@ -177,6 +180,7 @@ class Application(tk.Tk):
         '''
         Create the array of routines selected for the current sequence of vision tests
         '''
+        self.ball.name = askstring("Input Name", f"Input Participant's Name{30*' '}")
         # Hide mouse
         self.config(cursor="none")
 
