@@ -141,7 +141,7 @@ class Application(tk.Tk):
 
                 self.reset_buttons()
 
-            self.current_frame = self.CURRENT_FRAME.HOME
+                self.current_frame = self.CURRENT_FRAME.HOME
     
     def routine_finished(self, event=None):
         '''
