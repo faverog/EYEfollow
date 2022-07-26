@@ -2,12 +2,11 @@
 EYEfollow 1.0
 Application Class
 Gian Favero and Steven Caro
-December 2022
+2022
 '''
 
 # Python Imports
 from enum import Enum
-from time import sleep
 import tkinter as tk
 from tkinter.constants import CENTER
 from tkinter.messagebox import *
@@ -42,8 +41,13 @@ class Application(tk.Tk):
         self.configure_binds()
 
         # Create the prompt button array
-        self.activeButtons = {"Vertical_Saccade" : False, "Horizontal_Saccade" : False, "Smooth_Circle" : False,
-                              "Smooth_Vertical" : False, "Smooth_Horizontal" : False}
+        self.activeButtons = {
+            "Vertical_Saccade": False,
+            "Horizontal_Saccade": False,
+            "Smooth_Circle": False,
+            "Smooth_Vertical": False,
+            "Smooth_Horizontal": False
+        }
 
         # Create an instance of the Home Screen frame
         self.frame = Home_Screen(master=self.container, controller=self)
@@ -51,9 +55,10 @@ class Application(tk.Tk):
         # Create an instance of the test routine canvas
         self.test_routine_canvas = Test_Routine_Canvas(master=self.container, controller=self)
 
-        # Create an instance of the test routine canvas
+        # Create an instance of a test routine object (displayed on test_routine_canvas)
         self.test_routine = Test_Routine(self, self.test_routine_canvas)
 
+        # Show the home screen
         self.show_home()
 
         self.update_idletasks()
