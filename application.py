@@ -52,7 +52,7 @@ class Application(tk.Tk):
         self.test_routine_canvas = Test_Routine_Canvas(master=self.container, controller=self)
 
         # Create an instance of the test routine canvas
-        self.ball = Test_Routine(self, self.test_routine_canvas)
+        self.test_routine = Test_Routine(self, self.test_routine_canvas)
 
         self.show_home()
 
@@ -132,7 +132,7 @@ class Application(tk.Tk):
             if answer:
                 self.frame.tkraise()
                 self.config(cursor="arrow")
-                self.ball.cancel()
+                self.test_routine.cancel()
 
                 self.reset_buttons()
 
@@ -180,22 +180,27 @@ class Application(tk.Tk):
         '''
         Create the array of routines selected for the current sequence of vision tests
         '''
-        self.ball.name = askstring("Input Name", f"Input Participant's Name{30*' '}")
-        # Hide mouse
-        self.config(cursor="none")
+        participant_name = askstring("Input Name", f"Input Participant's Name{30*' '}")
 
-        # Display the test routine canvas 
-        self.show_canvas(self.test_routine_canvas, self.CURRENT_FRAME.EYE_TEST)
+        if participant_name is None:
+            self.reset_buttons()
+        else:
+            # Hide mouse
+            self.config(cursor="none")
 
-        # Add the selected test options to a list
-        tests = []
-        for key, item in self.activeButtons.items():
-            if item is True:
-                tests.append(key)
-        
-        # Pass the list to the Ball_Object and update ball state
-        self.ball.test_names = iter(tests)
-        self.ball.state = Routine_State.update_test
+            # Display the test routine canvas 
+            self.show_canvas(self.test_routine_canvas, self.CURRENT_FRAME.EYE_TEST)
+
+            # Add the selected test options to a list
+            tests = []
+            for key, item in self.activeButtons.items():
+                if item is True:
+                    tests.append(key)
+            
+            # Pass the participant name and list to the Test Routine and update the test_routine state
+            self.test_routine.participant_name = participant_name
+            self.test_routine.test_names = iter(tests)
+            self.test_routine.state = Routine_State.update_test
 
 if __name__ == '__main__':
     app = Application()

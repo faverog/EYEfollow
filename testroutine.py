@@ -67,7 +67,7 @@ class Test_Routine:
         self.canvas.itemconfig(self.ball, state='hidden')
 
         # Initialize Participant's Name
-        self.name = "Default Participant"
+        self.participant_name = "Default Participant"
 
         # Initialize the countdown text items
         self.count = countdown_duration
@@ -260,7 +260,7 @@ class Test_Routine:
         self.drawing_finished = 0
 
     def exportData(self):
-        with pd.ExcelWriter(f"Test Results/{self.name}.xlsx") as writer:
+        with pd.ExcelWriter(f"Test Results/{self.participant_name}.xlsx") as writer:
             for key in self.dfs.keys():
                 self.dfs[key].to_excel(writer, sheet_name=key)
     
