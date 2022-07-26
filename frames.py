@@ -2,7 +2,7 @@
 EYEfollow 1.0
 Home Screen Class
 Gian Favero and Steven Caro
-December 2022
+2022
 '''
 
 import tkinter as tk
@@ -115,4 +115,3 @@ class Test_Routine_Canvas(tk.Canvas):
         self.controller = controller
         self.config(height=controller.height, width=controller.width, bg="black")
 
-    

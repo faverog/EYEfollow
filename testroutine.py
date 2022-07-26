@@ -1,10 +1,11 @@
 '''
 EYEfollow 1.0
-Ball Class 
+Test Routine Class 
 Gian Favero and Steven Caro
 2022
 '''
 
+# Python Imports
 import tkinter as tk
 from enum import Enum, auto
 from math import pi, sin, cos
@@ -17,28 +18,29 @@ routine_duration_freq = {
     "Vertical_Saccade": {
         "Duration": 10,     # s
         "Frequency": 1      # Hz
-        },
+    },
     "Horizontal_Saccade": {
         "Duration": 10, 
         "Frequency": 1
-        },
+    },
     "Smooth_Circle": {
         "Duration": 16, 
         "Frequency": 6.5/16
-        },
+    },
     "Smooth_Vertical": {
         "Duration": 22.5,
         "Frequency": 3.25/22.5
-        },
+    },
     "Smooth_Horizontal": {
         "Duration": 27,
         "Frequency": 2/27
-        },
-    }
+    },
+}
 
 draw_refresh_rate   = 10      # ms
 countdown_duration  = 3       # s
 state_machine_cycle = 100     # ms
+ball_radius = 12              # px
 
 class Routine_State(Enum):
     '''
@@ -62,13 +64,16 @@ class Test_Routine:
             self.tracker = EyeTracker()
 
         # Initialize the ball (oval) shape
-        self.ball_radius = 12
+        self.ball_radius = ball_radius
         self.ball = self.canvas.create_oval(0, 0, self.ball_radius, self.ball_radius, fill="white")
         self.canvas.itemconfig(self.ball, state='hidden')
 
+        # Initialize Participant's Name
+        self.participant_name = "Default Participant"
+
         # Initialize the countdown text items
         self.count = countdown_duration
-        self.countdown_text = self.canvas.create_text(self.master.width/2, self.master.height/2, text=self.count, 
+        self.countdown_text = self.canvas.create_text(self.master.width/2, self.master.height/2, text=self.count,
                                                       font=("Arial", 50, "bold"), justify='center', fill="white")
         self.canvas.itemconfig(self.countdown_text, state='hidden')
 
@@ -79,7 +84,7 @@ class Test_Routine:
         self.start_drawing = 0
         self.drawing_finished = 0
 
-        # Pandas data frame
+        # Initialize the Pandas data frame
         self.dfs = {}
 
         # Call 'main loop' of the class
@@ -204,6 +209,9 @@ class Test_Routine:
         return lambda t: (0.5 * sin(2 * pi * routine_duration_freq["Smooth_Circle"]["Frequency"] * t), 0.5 * cos(2 * pi * routine_duration_freq["Smooth_Circle"]["Frequency"] * t))
 
     def start_collection(self):
+        '''
+        Starts eye tracker data collection
+        '''
         try:
             self.tracker_data = list[tuple[float, str, dict[str, str]]]()
             self.tracker.send_data        = True
@@ -218,6 +226,9 @@ class Test_Routine:
             self.start_collection()
     
     def stop_collection(self):
+        '''
+        Stops eye tracker data collection, serializes it, and then formats into a pd dataframe
+        '''
         try:
             self.tracker.send_data        = False
             self.tracker.send_pupil_left  = False
@@ -239,16 +250,18 @@ class Test_Routine:
 
     def cancel(self):
         '''
-        Cancel all test routines being run and reset variables
+        Cancels all test routines being run and reset variables
         '''
         try:
             self.draw_ref = self.canvas.after_cancel(self.draw_ref)
         except:
             pass
-
+        
+        # Ensure the moving ball and the countdown text are hidden
         self.canvas.itemconfig(self.countdown_text, state='hidden')
         self.canvas.itemconfig(self.ball, state="hidden")
 
+        # Reset state and test variables
         self.state = Routine_State.idle
         self.current_test = None
         self.count = countdown_duration
@@ -257,28 +270,35 @@ class Test_Routine:
         self.drawing_finished = 0
 
     def exportData(self):
-        with pd.ExcelWriter("Test Results/Sample.xlsx") as writer:
+        '''
+        Exports the pd dataframe to an Excel file
+        '''
+        with pd.ExcelWriter(f"Test Results/{self.participant_name}.xlsx") as writer:
             for key in self.dfs.keys():
                 self.dfs[key].to_excel(writer, sheet_name=key)
     
     def serialize_tracker_data(self, data: list[tuple[float, str, dict[str, str]]]) -> str:
+        '''
+        Organizes the raw data from the GazePoint eye tracker into column sorted arrays
+        '''
         result={}
         for key in [
                         "TIME",
-                        "LPOGX", "LPOGY", "LPOGV",  # Sent by send_pog_left
-                        "RPOGX", "RPOGY", "RPOGV",  # Sent by send_pog_right
+                        "LPOGX", "LPOGY", "LPOGV",            # Sent by send_pog_left
+                        "RPOGX", "RPOGY", "RPOGV",            # Sent by send_pog_right
                         "LPCX", "LPCY", "LPD", "LPS", "LPV",  # Sent by send_pupil_left
                         "RPCX", "RPCY", "RPD", "RPS", "RPV",  # Sent by send_pupil_right
-                        ]:
+                    ]:
                         result[key] = []
 
         for contents in data:
             try:
+                # Only taking entries with REC and TIME filters out incomplete data tuple entries
                 if 'REC' in contents and 'TIME' in contents[2].keys():
                     for key in [
                             "TIME",
-                            "LPOGX", "LPOGY", "LPOGV",  # Sent by send_pog_left
-                            "RPOGX", "RPOGY", "RPOGV",  # Sent by send_pog_right
+                            "LPOGX", "LPOGY", "LPOGV",            # Sent by send_pog_left
+                            "RPOGX", "RPOGY", "RPOGV",            # Sent by send_pog_right
                             "LPCX", "LPCY", "LPD", "LPS", "LPV",  # Sent by send_pupil_left
                             "RPCX", "RPCY", "RPD", "RPS", "RPV",  # Sent by send_pupil_right
                             ]: 

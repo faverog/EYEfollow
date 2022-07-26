@@ -2,7 +2,7 @@
 EYEfollow 1.0
 Application Class
 Gian Favero and Steven Caro
-December 2022
+2022
 '''
 
 # Python Imports
@@ -10,6 +10,7 @@ from enum import Enum
 import tkinter as tk
 from tkinter.constants import CENTER
 from tkinter.messagebox import *
+from tkinter.simpledialog import askstring
 import ctypes
 
 # Project Imports
@@ -40,8 +41,13 @@ class Application(tk.Tk):
         self.configure_binds()
 
         # Create the prompt button array
-        self.activeButtons = {"Vertical_Saccade" : False, "Horizontal_Saccade" : False, "Smooth_Circle" : False,
-                              "Smooth_Vertical" : False, "Smooth_Horizontal" : False}
+        self.activeButtons = {
+            "Vertical_Saccade": False,
+            "Horizontal_Saccade": False,
+            "Smooth_Circle": False,
+            "Smooth_Vertical": False,
+            "Smooth_Horizontal": False
+        }
 
         # Create an instance of the Home Screen frame
         self.frame = Home_Screen(master=self.container, controller=self)
@@ -49,9 +55,10 @@ class Application(tk.Tk):
         # Create an instance of the test routine canvas
         self.test_routine_canvas = Test_Routine_Canvas(master=self.container, controller=self)
 
-        # Create an instance of the test routine canvas
-        self.ball = Test_Routine(self, self.test_routine_canvas)
+        # Create an instance of a test routine object (displayed on test_routine_canvas)
+        self.test_routine = Test_Routine(self, self.test_routine_canvas)
 
+        # Show the home screen
         self.show_home()
 
         self.update_idletasks()
@@ -107,6 +114,7 @@ class Application(tk.Tk):
         Raise the Test Routine Canvas to the top of the stack and start test routine
         '''
         canvas.place(relx=0.5, rely=0.5, anchor=CENTER)
+        self.canvas = canvas
         tk.Misc.lift(canvas)
         self.current_frame = current_frame
         self.update_idletasks()
@@ -129,7 +137,7 @@ class Application(tk.Tk):
             if answer:
                 self.frame.tkraise()
                 self.config(cursor="arrow")
-                self.ball.cancel()
+                self.test_routine.cancel()
 
                 self.reset_buttons()
 
@@ -177,21 +185,27 @@ class Application(tk.Tk):
         '''
         Create the array of routines selected for the current sequence of vision tests
         '''
-        # Hide mouse
-        self.config(cursor="none")
+        participant_name = askstring("Input Name", f"Input Participant's Name{30*' '}")
 
-        # Display the test routine canvas 
-        self.show_canvas(self.test_routine_canvas, self.CURRENT_FRAME.EYE_TEST)
+        if participant_name is None:
+            self.reset_buttons()
+        else:
+            # Hide mouse
+            self.config(cursor="none")
 
-        # Add the selected test options to a list
-        tests = []
-        for key, item in self.activeButtons.items():
-            if item is True:
-                tests.append(key)
-        
-        # Pass the list to the Ball_Object and update ball state
-        self.ball.test_names = iter(tests)
-        self.ball.state = Routine_State.update_test
+            # Display the test routine canvas 
+            self.show_canvas(self.test_routine_canvas, self.CURRENT_FRAME.EYE_TEST)
+
+            # Add the selected test options to a list
+            tests = []
+            for key, item in self.activeButtons.items():
+                if item is True:
+                    tests.append(key)
+            
+            # Pass the participant name and list to the Test Routine and update the test_routine state
+            self.test_routine.participant_name = participant_name
+            self.test_routine.test_names = iter(tests)
+            self.test_routine.state = Routine_State.update_test
 
 if __name__ == '__main__':
     app = Application()
