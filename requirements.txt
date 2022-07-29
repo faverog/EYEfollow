@@ -1,0 +1,4 @@
+open_gaze==0.0.0
+pandas==1.4.3
+Pillow==9.2.0
+PyGetWindow==0.0.9
