@@ -1,0 +1,5 @@
+open_gaze-0.0.0-cp39-cp39-win_amd64.whl
+pandas==1.4.3
+Pillow==9.2.0
+PyGetWindow==0.0.9
+openpyxl==3.0.10

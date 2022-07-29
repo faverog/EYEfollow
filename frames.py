@@ -56,8 +56,6 @@ class Home_Screen(tk.Frame):
         Configure the grid and background colour of the Home Screen
         '''
         self.configure(bg="white")
-        #self.grid_rowconfigure(0, weight=1)
-        #self.grid_rowconfigure(3, weight=1)
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure(7, weight=1)
         

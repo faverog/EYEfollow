@@ -7,11 +7,17 @@ Gian Favero and Steven Caro
 
 # Python Imports
 from enum import Enum
+import os
+from time import sleep
+import ctypes
+import traceback
+
+# Module Imports
+import pygetwindow as gw
 import tkinter as tk
 from tkinter.constants import CENTER
 from tkinter.messagebox import *
 from tkinter.simpledialog import askstring
-import ctypes
 
 # Project Imports
 from testroutine import Test_Routine, Routine_State
@@ -19,6 +25,9 @@ from frames import Home_Screen, Test_Routine_Canvas
 
 # Set resolution for screen
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
+
+# Window title
+window_title = "EYEfollow, 2022"
 
 class Application(tk.Tk):
 
@@ -29,13 +38,15 @@ class Application(tk.Tk):
     
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        self.title("EyeFollow, FC 2021")
+        self.title(window_title)
 
         # Create container for application
         self.container = self.configure_container()
 
         # Configure screen/window attributes
         self.configure_screen_attributes()
+        self.EYEfollow_window = gw.getWindowsWithTitle(window_title)[0]
+        self.gazepoint_window = gw.getWindowsWithTitle("Gazepoint")[0]
 
         # Configure key bindings
         self.configure_binds()
@@ -185,11 +196,25 @@ class Application(tk.Tk):
         '''
         Create the array of routines selected for the current sequence of vision tests
         '''
+        # Bring calibration window to the forefront
+        self.activate_gazepoint()
+
+        while gw.getActiveWindowTitle() == "Gazepoint Control x64" and not None:
+            sleep(10e-2)
+
+        # Get participant's name
         participant_name = askstring("Input Name", f"Input Participant's Name{30*' '}")
 
         if participant_name is None:
             self.reset_buttons()
+            self.EYEfollow_window.activate()
         else:
+            if participant_name == '':
+                participant_name = "Sample_Participant"
+
+            # Activate EYEfollow window
+            self.EYEfollow_window.activate()
+
             # Hide mouse
             self.config(cursor="none")
 
@@ -207,6 +232,31 @@ class Application(tk.Tk):
             self.test_routine.test_names = iter(tests)
             self.test_routine.state = Routine_State.update_test
 
+    def activate_gazepoint(self):
+        try:
+            if self.gazepoint_window is None:
+                os.startfile('C:/Program Files (x86)/Gazepoint/Gazepoint/bin64/Gazepoint.exe')
+                sleep(2)
+                self.gazepoint_window = gw.getWindowsWithTitle("Gazepoint")[0]
+            else:
+                self.gazepoint_window.activate()
+                sleep(0.2)
+        except:
+            traceback.print_exc()
+
 if __name__ == '__main__':
+    # Start Gazepoint Control
+    try:
+        os.startfile('C:/Program Files (x86)/Gazepoint/Gazepoint/bin64/Gazepoint.exe')
+        sleep(2)
+    except:
+        traceback.print_exc()
+
     app = Application()
     app.mainloop()
+
+    # Close Gazepoint Control
+    try:
+        os.system("TASKKILL /IM Gazepoint.exe")
+    except:
+        traceback.print_exc()
