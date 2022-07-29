@@ -6,9 +6,8 @@ Gian Favero and Steven Caro
 '''
 
 # Python Imports
-#import os
 from math import pi, sin, cos
-from time import time, time_ns, sleep
+from time import time, time_ns
 from enum import Enum, auto
 import traceback
 
