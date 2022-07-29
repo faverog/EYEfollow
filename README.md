@@ -1,4 +1,5 @@
 # EYEfollow
+Steven Caro and Gian Favero, 2022
 ![Screenshot](Logo.png)
 EYEfollow is a novel diagnostic device that combines an interactive user experience with cutting-edge eye tracking technology to deliver easy, fast, and accurate eye assessments.
 
