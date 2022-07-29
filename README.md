@@ -27,7 +27,7 @@ This project requires Python 3.9.
 ### Data Collection
 Gazepoint Control should automatically open alongside the GUI, and should become the active window once the `Start` button is pressed. It is recommended to use this window to calibrate the Gazepoint GP3 prior to entering the participant's name and starting the test(s).
 
-Once the test(s) are complete, the collected eye data is outputted as a .xlsx file within a newly created `Test Results` directory in the same path as `application.py`. 
+Once the test(s) are complete, the collected eye data is outputted as a .xlsx file within a newly created `Test Results` directory located on the Desktop. 
 
 ### Distribution
 The EYEfollow application can be distributed as an executable (.exe) file through the use of the auto-py-to-exe library.
