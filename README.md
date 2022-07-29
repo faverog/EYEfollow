@@ -9,7 +9,7 @@ EYEfollow is currently under development at the University of Windsor in a partn
 ### Gazepoint GP3 Software
 1) Find the Gazepoint software at this Dropbox [link](https://www.dropbox.com/s/7wtdwbvmq8ws1ud/Gazepoint_5.1.0.exe?dl=0) 
 2) Download and then use the wizard to install the accompanying Gazepoint applications (Analysis, Control, etc)
-3) Locate and open Gazepoint Control and Gazepoint Analysi
+3) Locate and open Gazepoint Control and Gazepoint Analysis
 4) In Gazepoint Analysis, make a new project and hit the calibrate button
 5) Exit Gazepoint Analysis and return to Gazepoint Control
 6) Ensure that the calibration sequence occurs when the calibrate button is pressed.
