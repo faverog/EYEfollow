@@ -9,12 +9,15 @@ Gian Favero and Steven Caro
 from enum import Enum
 import os
 from time import sleep
+import ctypes
+import traceback
+
+# Module Imports
+import pygetwindow as gw
 import tkinter as tk
 from tkinter.constants import CENTER
 from tkinter.messagebox import *
 from tkinter.simpledialog import askstring
-import ctypes
-import pygetwindow as gw
 
 # Project Imports
 from testroutine import Test_Routine, Routine_State
@@ -24,7 +27,7 @@ from frames import Home_Screen, Test_Routine_Canvas
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 
 # Window title
-window_title = "EyeFollow, FC 2022"
+window_title = "EYEfollow, 2022"
 
 class Application(tk.Tk):
 
@@ -42,8 +45,8 @@ class Application(tk.Tk):
 
         # Configure screen/window attributes
         self.configure_screen_attributes()
-        self.gazepoint_window = gw.getWindowsWithTitle("Gazepoint")[0]
         self.EYEfollow_window = gw.getWindowsWithTitle(window_title)[0]
+        self.gazepoint_window = gw.getWindowsWithTitle("Gazepoint")[0]
 
         # Configure key bindings
         self.configure_binds()
@@ -194,11 +197,10 @@ class Application(tk.Tk):
         Create the array of routines selected for the current sequence of vision tests
         '''
         # Bring calibration window to the forefront
-        self.gazepoint_window.activate()
-        sleep(0.2)
+        self.activate_gazepoint()
 
         while gw.getActiveWindowTitle() == "Gazepoint Control x64" and not None:
-            pass
+            sleep(10e-2)
 
         # Get participant's name
         participant_name = askstring("Input Name", f"Input Participant's Name{30*' '}")
@@ -230,13 +232,31 @@ class Application(tk.Tk):
             self.test_routine.test_names = iter(tests)
             self.test_routine.state = Routine_State.update_test
 
+    def activate_gazepoint(self):
+        try:
+            if self.gazepoint_window is None:
+                os.startfile('C:/Program Files (x86)/Gazepoint/Gazepoint/bin64/Gazepoint.exe')
+                sleep(2)
+                self.gazepoint_window = gw.getWindowsWithTitle("Gazepoint")[0]
+            else:
+                self.gazepoint_window.activate()
+                sleep(0.2)
+        except:
+            traceback.print_exc()
+
 if __name__ == '__main__':
     # Start Gazepoint Control
-    os.startfile('C:/Program Files (x86)/Gazepoint/Gazepoint/bin64/Gazepoint.exe')
-    sleep(2)
+    try:
+        os.startfile('C:/Program Files (x86)/Gazepoint/Gazepoint/bin64/Gazepoint.exe')
+        sleep(2)
+    except:
+        traceback.print_exc()
 
     app = Application()
     app.mainloop()
 
     # Close Gazepoint Control
-    os.system("TASKKILL /IM Gazepoint.exe")
+    try:
+        os.system("TASKKILL /IM Gazepoint.exe")
+    except:
+        traceback.print_exc()
