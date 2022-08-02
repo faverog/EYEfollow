@@ -15,7 +15,7 @@ import pandas as pd
 
 class EyeTracker_DM(EyeTracker):
     def __init__(self, master):
-        super.__init__()
+        super().__init__()
         self.master = master
         #self.tracker = EyeTracker()
         self.tracker_data = None
@@ -27,12 +27,12 @@ class EyeTracker_DM(EyeTracker):
         '''
         try:
             self.tracker_data = list[tuple[float, str, dict[str, str]]]()
-            self.tracker.send_data        = True
-            self.tracker.send_pupil_left  = True
-            self.tracker.send_pupil_right = True
-            self.tracker.send_pog_left    = True
-            self.tracker.send_pog_right   = True
-            self.tracker.send_time        = True
+            self.send_data        = True
+            self.send_pupil_left  = True
+            self.send_pupil_right = True
+            self.send_pog_left    = True
+            self.send_pog_right   = True
+            self.send_time        = True
             print(f"Started collecting data: {self.master.current_test}")
         except:
             print('FAILED TO START')
@@ -43,19 +43,19 @@ class EyeTracker_DM(EyeTracker):
         Stops eye tracker data collection, serializes it, and then formats into a pd dataframe
         '''
         try:
-            self.tracker.send_data        = False
-            self.tracker.send_pupil_left  = False
-            self.tracker.send_pupil_right = False
-            self.tracker.send_pog_left    = False
-            self.tracker.send_pog_right   = False
-            self.tracker.send_time        = False
+            self.send_data        = False
+            self.send_pupil_left  = False
+            self.send_pupil_right = False
+            self.send_pog_left    = False
+            self.send_pog_right   = False
+            self.send_time        = False
             print(f"Finished collecting data: {self.master.current_test}")
         except:
             print("FAILED TO STOP")
             self.stop_collection()
         while True:
             sleep(1e-2)
-            if self.tracker.read_msg_async() is None:
+            if self.read_msg_async() is None:
                 break
 
         self.tracker_data = self.serialize_tracker_data(self.tracker_data)
