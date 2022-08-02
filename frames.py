@@ -36,7 +36,7 @@ class Home_Screen(tk.Frame):
                               command=lambda:self.controller.create_test_routine())
 
         # Place logo png
-        logo_image = Image.open("Logo.png")
+        logo_image = Image.open("images/Logo.png")
         logo_photo_image = ImageTk.PhotoImage(logo_image)
         logo_label = tk.Label(self, image=logo_photo_image, bg="white")
         logo_label.image = logo_photo_image

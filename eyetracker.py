@@ -13,17 +13,18 @@ from time import sleep
 from open_gaze import EyeTracker
 import pandas as pd
 
-class EyeTracker_DM:
-    def __init__(self):
-        self.tracker = EyeTracker()
-        self.current_test = None
+class EyeTracker_DM(EyeTracker):
+    def __init__(self, master):
+        super.__init__()
+        self.master = master
+        #self.tracker = EyeTracker()
+        self.tracker_data = None
         self.dfs = {}
     
-    def start_collection(self, current_test):
+    def start_collection(self):
         '''
         Starts eye tracker data collection
         '''
-        self.current_test = current_test
         try:
             self.tracker_data = list[tuple[float, str, dict[str, str]]]()
             self.tracker.send_data        = True
@@ -32,7 +33,7 @@ class EyeTracker_DM:
             self.tracker.send_pog_left    = True
             self.tracker.send_pog_right   = True
             self.tracker.send_time        = True
-            print(f"Started collecting data: {self.current_test}")
+            print(f"Started collecting data: {self.master.current_test}")
         except:
             print('FAILED TO START')
             self.start_collection()
@@ -48,7 +49,7 @@ class EyeTracker_DM:
             self.tracker.send_pog_left    = False
             self.tracker.send_pog_right   = False
             self.tracker.send_time        = False
-            print(f"Finished collecting data: {self.current_test}")
+            print(f"Finished collecting data: {self.master.current_test}")
         except:
             print("FAILED TO STOP")
             self.stop_collection()
@@ -58,7 +59,7 @@ class EyeTracker_DM:
                 break
 
         self.tracker_data = self.serialize_tracker_data(self.tracker_data)
-        self.dfs[self.current_test]=pd.DataFrame(self.tracker_data)
+        self.dfs[self.master.current_test]=pd.DataFrame(self.tracker_data)
 
     def serialize_tracker_data(self, data: list[tuple[float, str, dict[str, str]]]) -> str:
         '''
@@ -92,7 +93,7 @@ class EyeTracker_DM:
                 
         return result
 
-    def export_data(self, participant_name):
+    def export_data(self):
         '''
         Exports the pd dataframe to an Excel file
         '''
@@ -100,6 +101,6 @@ class EyeTracker_DM:
         if not os.path.exists(path):
             os.makedirs(path)
             
-        with pd.ExcelWriter(f"{path}/{participant_name}.xlsx") as writer:
+        with pd.ExcelWriter(f"{path}/{self.master.participant_name}.xlsx") as writer:
             for key in self.dfs.keys():
                 self.dfs[key].to_excel(writer, sheet_name=key)

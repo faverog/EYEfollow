@@ -13,7 +13,7 @@ import traceback
 
 # Module Imports
 import tkinter as tk
-from eyetracker_data_management import EyeTracker_DM
+from eyetracker import EyeTracker_DM
 
 # Constants to control behaviour of the tests
 test_params = {
@@ -69,7 +69,7 @@ class Test_Routine:
         # Configure data collection
         self.collect_data = True
         if self.collect_data:
-            self.tracker = EyeTracker_DM()
+            self.tracker = EyeTracker_DM(master=self)
 
         # Initialize the ball (oval) shapes
         self.ball_radius = ball_radius
@@ -103,7 +103,7 @@ class Test_Routine:
             if self.current_test == "Done":
                 self.master.routine_finished()
                 if self.collect_data:
-                    self.tracker.export_data(self.participant_name)
+                    self.tracker.export_data()
                 self.cancel()
             else:
                 self.time_ref = time()
@@ -117,7 +117,7 @@ class Test_Routine:
                 self.start_drawing = 1
                 self.state = Routine_State.drawing
                 if self.collect_data:
-                    self.tracker.start_collection(self.current_test)
+                    self.tracker.start_collection()
                     
         elif self.state == Routine_State.drawing:
             if self.start_drawing:
@@ -154,7 +154,7 @@ class Test_Routine:
 
         if self.collect_data:
             try:
-                while (msg := self.tracker.tracker.read_msg_async()) is not None:
+                while (msg := self.tracker.read_msg_async()) is not None:
                     self.tracker.tracker_data.append((time(), *msg))
                     self.get_pog(msg)
             except:
@@ -290,6 +290,7 @@ class Test_Routine:
         self.state = Routine_State.idle
         self.test_names = []
         self.current_test = None
+        self.tracker.current_test = None
         self.start_countdown = 0
         self.start_drawing = 0
         self.drawing_finished = 0
