@@ -30,7 +30,7 @@ test_params = {
     "Smooth_Circle": {
         "Duration": 16, 
         "Frequency": 6.5/16,
-        "Instruction": "Follows the dot"
+        "Instruction": "Follow the dot"
     },
     "Smooth_Vertical": {
         "Duration": 22.5,
