@@ -6,16 +6,14 @@ Gian Favero and Steven Caro
 '''
 
 # Python Imports
-import os
 from math import pi, sin, cos
-from time import time, time_ns, sleep
+from time import time, time_ns
 from enum import Enum, auto
 import traceback
 
 # Module Imports
 import tkinter as tk
-import pandas as pd
-from open_gaze import EyeTracker
+from eyetracker import EyeTracker_DM
 
 # Constants to control behaviour of the tests
 test_params = {
@@ -71,7 +69,7 @@ class Test_Routine:
         # Configure data collection
         self.collect_data = True
         if self.collect_data:
-            self.tracker = EyeTracker()
+            self.tracker = EyeTracker_DM(master=self)
 
         # Initialize the ball (oval) shapes
         self.ball_radius = ball_radius
@@ -105,7 +103,7 @@ class Test_Routine:
             if self.current_test == "Done":
                 self.master.routine_finished()
                 if self.collect_data:
-                    self.exportData()
+                    self.tracker.export_data()
                 self.cancel()
             else:
                 self.time_ref = time()
@@ -119,7 +117,7 @@ class Test_Routine:
                 self.start_drawing = 1
                 self.state = Routine_State.drawing
                 if self.collect_data:
-                    self.start_collection()
+                    self.tracker.start_collection()
                     
         elif self.state == Routine_State.drawing:
             if self.start_drawing:
@@ -131,7 +129,7 @@ class Test_Routine:
                 self.drawing_finished = 0
                 self.state = Routine_State.update_test
                 if self.collect_data:
-                    self.stop_collection()
+                    self.tracker.stop_collection()
 
         elif self.state == Routine_State.idle:
             pass
@@ -157,7 +155,7 @@ class Test_Routine:
         if self.collect_data:
             try:
                 while (msg := self.tracker.read_msg_async()) is not None:
-                    self.tracker_data.append((time(), *msg))
+                    self.tracker.tracker_data.append((time(), *msg))
                     self.get_pog(msg)
             except:
                 traceback.print_exc()
@@ -241,47 +239,7 @@ class Test_Routine:
         return lambda t: (1.5 * cos(2 * pi * test_params["Smooth_Horizontal"]["Frequency"] * t), 0)
 
     def smooth_circle(self):
-        return lambda t: (0.5 * sin(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t), 0.5 * cos(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t))
-
-    def start_collection(self):
-        '''
-        Starts eye tracker data collection
-        '''
-        try:
-            self.tracker_data = list[tuple[float, str, dict[str, str]]]()
-            self.tracker.send_data        = True
-            self.tracker.send_pupil_left  = True
-            self.tracker.send_pupil_right = True
-            self.tracker.send_pog_left    = True
-            self.tracker.send_pog_right   = True
-            self.tracker.send_time        = True
-            print(f"Started collecting data: {self.current_test}")
-        except:
-            print('FAILED TO START')
-            self.start_collection()
-    
-    def stop_collection(self):
-        '''
-        Stops eye tracker data collection, serializes it, and then formats into a pd dataframe
-        '''
-        try:
-            self.tracker.send_data        = False
-            self.tracker.send_pupil_left  = False
-            self.tracker.send_pupil_right = False
-            self.tracker.send_pog_left    = False
-            self.tracker.send_pog_right   = False
-            self.tracker.send_time        = False
-            print(f"Finished collecting data: {self.current_test}")
-        except:
-            print("FAILED TO STOP")
-            self.stop_collection()
-        while True:
-            sleep(1e-2)
-            if self.tracker.read_msg_async() is None:
-                break
-
-        self.tracker_data = self.serialize_tracker_data(self.tracker_data)
-        self.dfs[self.current_test]=pd.DataFrame(self.tracker_data)
+        return lambda t: (0.5 * cos(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t), 0.5 * sin(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t))
 
     def get_pog(self, msg):
         '''
@@ -321,53 +279,10 @@ class Test_Routine:
                 bottom_ball_colour = "white"
 
         return top_ball_colour, bottom_ball_colour
-    
-    def serialize_tracker_data(self, data: list[tuple[float, str, dict[str, str]]]) -> str:
-        '''
-        Organizes the raw data from the GazePoint eye tracker into column sorted arrays
-        '''
-        result={}
-        for key in [
-                        "TIME",
-                        "LPOGX", "LPOGY", "LPOGV",            # Sent by send_pog_left
-                        "RPOGX", "RPOGY", "RPOGV",            # Sent by send_pog_right
-                        "LPCX", "LPCY", "LPD", "LPS", "LPV",  # Sent by send_pupil_left
-                        "RPCX", "RPCY", "RPD", "RPS", "RPV",  # Sent by send_pupil_right
-                    ]:
-                        result[key] = []
-
-        for contents in data:
-            try:
-                # Only taking entries with REC and TIME filters out incomplete data tuple entries
-                if 'REC' in contents and 'TIME' in contents[2].keys():
-                    for key in [
-                            "TIME",
-                            "LPOGX", "LPOGY", "LPOGV",            # Sent by send_pog_left
-                            "RPOGX", "RPOGY", "RPOGV",            # Sent by send_pog_right
-                            "LPCX", "LPCY", "LPD", "LPS", "LPV",  # Sent by send_pupil_left
-                            "RPCX", "RPCY", "RPD", "RPS", "RPV",  # Sent by send_pupil_right
-                            ]: 
-
-                            result[key].append(float(contents[2][key]) if key in contents[2] else '')
-            except:
-                print(contents) # TODO get to the bottom of this (if program gets here, no data is written)
-                
-        return result
-
-    def exportData(self):
-        '''
-        Exports the pd dataframe to an Excel file
-        '''
-        if not os.path.exists('Test Results'):
-            os.makedirs('Test Results')
-            
-        with pd.ExcelWriter(f"Test Results/{self.participant_name}.xlsx") as writer:
-            for key in self.dfs.keys():
-                self.dfs[key].to_excel(writer, sheet_name=key)
 
     def variable_reset(self):
         # Reset the data collection variables
-        self.dfs = {}
+        self.tracker.dfs = {}
         self.left_eye_pog = [0, 0]
         self.right_eye_pog = [0, 0]
 
@@ -375,6 +290,7 @@ class Test_Routine:
         self.state = Routine_State.idle
         self.test_names = []
         self.current_test = None
+        self.tracker.current_test = None
         self.start_countdown = 0
         self.start_drawing = 0
         self.drawing_finished = 0
@@ -390,7 +306,7 @@ class Test_Routine:
 
         # Stop data collection
         if self.collect_data and self.state is not Routine_State.countdown:    
-            self.stop_collection()
+            self.tracker.stop_collection()
         
         # Ensure the moving ball and the countdown text are hidden
         self.canvas.itemconfig(self.countdown_text, state='hidden')
