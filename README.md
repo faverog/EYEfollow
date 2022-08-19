@@ -30,15 +30,7 @@ Gazepoint Control should automatically open alongside the GUI, and should become
 Once the test(s) are complete, the collected eye data is outputted as a .xlsx file within a newly created `Test Results` directory located on the Desktop. 
 
 ### Distribution
-The EYEfollow application can be distributed as an executable (.exe) file through the use of the auto-py-to-exe library.
+The EYEfollow application can be distributed as a .bat file which included in this repository.
 
-1) Install auto-py-to-exe by running `pip install auto-py-to-exe` in your environment
-2) In a terminal, run `auto-py-to-exe` - a GUI window should pop up if Step 1 was executed correctly
-3) For "Script Location", browse and select `application.py`
-4) Select "Window Based" (for easier debugging in case of an error)
-5) Select "Additional Files -> Add Files", browse and select `Logo.png`
-6) Select "Advanced" and enter `EYEfollow` in the `--name` field
-7) Select `--hidden-import` and enter `open_gaze` in its entry field
-8) Hit the "CONVERT .PY TO .EXE" button
+For ease of use, create a shortcut to the EYEfollow.bat file on your desktop or location of choice. Simply double-clicking EYEfollow.bat should first update the code (via git commands), then launch the EYEfollow application. 
 
-A directory called `output` should have been created containing a folder called `EYEfollow`, and inside this folder should be `EYEfollow.exe`. This executable file can be run directly or through a shortcut in a more accessible location. 
