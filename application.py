@@ -230,9 +230,13 @@ class Application(tk.Tk):
             # Pass the participant name and list to the Test Routine and update the test_routine state
             self.test_routine.participant_name = participant_name
             self.test_routine.test_names = iter(tests)
+            self.test_routine.current_test = next(self.test_routine.test_names)
             self.test_routine.state = Routine_State.update_test
 
     def activate_gazepoint(self):
+        # Check if window was accidentally closed
+        self.gazepoint_window = None if "Gazepoint Control x64" not in gw.getAllTitles() else self.gazepoint_window
+
         try:
             if self.gazepoint_window is None:
                 os.startfile('C:/Program Files (x86)/Gazepoint/Gazepoint/bin64/Gazepoint.exe')
