@@ -9,6 +9,8 @@ Gian Favero and Steven Caro
 from math import pi, sin, cos
 from time import time, time_ns
 from enum import Enum, auto
+from tkinter import messagebox
+from tkinter.messagebox import askyesno
 import traceback
 
 # Module Imports
@@ -99,15 +101,18 @@ class Test_Routine:
         Main loop for the class. Handles and transitions main state machine
         '''
         if self.state == Routine_State.update_test:
-            self.current_test = next(self.test_names, "Done")
             if self.current_test == "Done":
                 self.master.routine_finished()
                 if self.collect_data:
-                    self.tracker.export_data()
+                    try:
+                        self.tracker.export_data()
+                    except:
+                        traceback.print_exc()
                 self.cancel()
             else:
                 self.time_ref = time()
                 self.start_countdown = 1
+                messagebox.showinfo("Proceed?", "Are we ready to proceed?")
                 self.state = Routine_State.countdown
 
         elif self.state == Routine_State.countdown:
@@ -130,6 +135,8 @@ class Test_Routine:
                 self.state = Routine_State.update_test
                 if self.collect_data:
                     self.tracker.stop_collection()
+                if not askyesno(title="Retry?", message="Would you like to retry the test?"):
+                    self.current_test = next(self.test_names, "Done")
 
         elif self.state == Routine_State.idle:
             pass
