@@ -20,6 +20,7 @@ class EyeTracker_DM(EyeTracker):
         #self.tracker = EyeTracker()
         self.tracker_data = None
         self.dfs = {}
+        self.GT_dfs = {}
     
     def start_collection(self):
         '''
@@ -60,6 +61,8 @@ class EyeTracker_DM(EyeTracker):
 
         self.tracker_data = self.serialize_tracker_data(self.tracker_data)
         self.dfs[self.master.current_test]=pd.DataFrame(self.tracker_data)
+        if self.master.current_test != "Done":
+            self.GT_dfs[self.master.current_test]=pd.DataFrame(self.master.GTdata[self.master.current_test])
 
     def serialize_tracker_data(self, data: list[tuple[float, str, dict[str, str]]]) -> str:
         '''
@@ -97,10 +100,15 @@ class EyeTracker_DM(EyeTracker):
         '''
         Exports the pd dataframe to an Excel file
         '''
-        path = 'C:/Users/faverog/Desktop/Test Results'
+        #path = 'C:/Users/Stevi/OneDrive/Desktop/Test Results'
+        path = self.master.master.path
         if not os.path.exists(path):
             os.makedirs(path)
-            
+        
+        with pd.ExcelWriter(f"{path}/{self.master.participant_name}_GT.xlsx") as writer:
+            for key in self.master.GTdata.keys():
+                self.GT_dfs[key].to_excel(writer, sheet_name=key)
+
         with pd.ExcelWriter(f"{path}/{self.master.participant_name}.xlsx") as writer:
             for key in self.dfs.keys():
                 self.dfs[key].to_excel(writer, sheet_name=key)
