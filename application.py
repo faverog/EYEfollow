@@ -43,7 +43,7 @@ class Application(tk.Tk):
 
         # Take path to save data from command line
         self.path = sys.argv[1]
-        
+
         # Create container for application
         self.container = self.configure_container()
 

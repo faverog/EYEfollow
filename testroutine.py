@@ -146,7 +146,7 @@ class Test_Routine:
             if self.start_drawing:
                 self.start_drawing = 0
                 self.time_ref = time()
-                self.canvas.itemconfig(self.ball, state='normal')
+                self.canvas.itemconfig(self.ball, state="normal")
                 self.draw()
             elif not self.start_drawing and self.drawing_finished:
                 self.drawing_finished = 0

@@ -100,7 +100,6 @@ class EyeTracker_DM(EyeTracker):
         '''
         Exports the pd dataframe to an Excel file
         '''
-        #path = 'C:/Users/Stevi/OneDrive/Desktop/Test Results'
         path = self.master.master.path
         if not os.path.exists(path):
             os.makedirs(path)
