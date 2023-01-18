@@ -8,6 +8,7 @@ Gian Favero and Steven Caro
 # Python Imports
 from enum import Enum
 import os
+import sys
 from time import sleep
 import ctypes
 import traceback
@@ -39,6 +40,9 @@ class Application(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title(window_title)
+
+        # Take path to save data from command line
+        self.path = sys.argv[1]
 
         # Create container for application
         self.container = self.configure_container()

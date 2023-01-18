@@ -31,7 +31,7 @@ test_params = {
     },
     "Smooth_Circle": {
         "Duration": 16, 
-        "Frequency": 6.5/16,
+        "Frequency": 5/16,
         "Instruction": "Follow the dot"
     },
     "Smooth_Vertical": {
@@ -72,6 +72,7 @@ class Test_Routine:
         self.collect_data = True
         if self.collect_data:
             self.tracker = EyeTracker_DM(master=self)
+        self.GTdata={}
 
         # Initialize the ball (oval) shapes
         self.ball_radius = ball_radius
@@ -114,6 +115,23 @@ class Test_Routine:
                 self.start_countdown = 1
                 messagebox.showinfo("Proceed?", "Are we ready to proceed?")
                 self.state = Routine_State.countdown
+                if self.current_test != "Done":
+                    self.GTdata[self.current_test]={}
+                    for key in ["Time", "X", "Y"]:
+                        self.GTdata[self.current_test][key]=[]
+                    if "Saccade" in self.current_test:
+                        if self.current_test == "Vertical_Saccade":
+                            f = self.vertical_saccade()
+                        else:
+                            f = self.horizontal_saccade()
+
+                        sac_coords = f(0)
+                        self.GTdata[self.current_test].pop("Time")
+                        self.GTdata[self.current_test]["X"].append(sac_coords[0][0])
+                        self.GTdata[self.current_test]["X"].append(sac_coords[1][0])
+                        self.GTdata[self.current_test]["Y"].append(sac_coords[0][1])
+                        self.GTdata[self.current_test]["Y"].append(sac_coords[1][1])
+                        print(self.GTdata[self.current_test])
 
         elif self.state == Routine_State.countdown:
             if self.start_countdown:
@@ -128,7 +146,7 @@ class Test_Routine:
             if self.start_drawing:
                 self.start_drawing = 0
                 self.time_ref = time()
-                self.canvas.itemconfig(self.ball, state='normal')
+                self.canvas.itemconfig(self.ball, state="normal")
                 self.draw()
             elif not self.start_drawing and self.drawing_finished:
                 self.drawing_finished = 0
@@ -222,11 +240,14 @@ class Test_Routine:
         # Saccade tests return 2 constant sets of points for the balls (on either end of screen)
         if "Saccade" in self.current_test:
             return f(t)
+
         # All other tests send an x-y coordinate as a function of time
         else:
             x_cen = self.master.width / 2 + self.master.height*(f(t)[0]/2)
             y_cen = self.master.height*(1/2 + f(t)[1]/2)
-            
+            self.GTdata[test]["Time"].append(t)
+            self.GTdata[test]["X"].append(x_cen)
+            self.GTdata[test]["Y"].append(y_cen)
             return x_cen, y_cen 
 
     def vertical_saccade(self):
@@ -246,7 +267,7 @@ class Test_Routine:
         return lambda t: (1.5 * cos(2 * pi * test_params["Smooth_Horizontal"]["Frequency"] * t), 0)
 
     def smooth_circle(self):
-        return lambda t: (0.5 * cos(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t), 0.5 * sin(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t))
+        return lambda t: (0.75 * cos(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t), 0.75 * sin(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t))
 
     def get_pog(self, msg):
         '''
