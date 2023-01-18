@@ -1,4 +1,4 @@
 @echo off
-git checkout GroundTruth
+git checkout main
 git pull
 python "application.py" "C:/Users/gradtest/Desktop/Test Results"
