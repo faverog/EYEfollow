@@ -1,4 +1,4 @@
 @echo off
-git checkout main
+git checkout GroundTruth
 git pull
-python "application.py" "C:/Users/Stevi/OneDrive/Desktop/Test Result"
+python "application.py" "C:/Users/gradtest/Desktop/Test Results"

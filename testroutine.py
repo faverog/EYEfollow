@@ -31,7 +31,7 @@ test_params = {
     },
     "Smooth_Circle": {
         "Duration": 16, 
-        "Frequency": 6.5/16,
+        "Frequency": 5/16,
         "Instruction": "Follow the dot"
     },
     "Smooth_Vertical": {
@@ -267,7 +267,7 @@ class Test_Routine:
         return lambda t: (1.5 * cos(2 * pi * test_params["Smooth_Horizontal"]["Frequency"] * t), 0)
 
     def smooth_circle(self):
-        return lambda t: (0.5 * cos(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t), 0.5 * sin(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t))
+        return lambda t: (0.75 * cos(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t), 0.75 * sin(2 * pi * test_params["Smooth_Circle"]["Frequency"] * t))
 
     def get_pog(self, msg):
         '''
