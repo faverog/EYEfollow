@@ -2,7 +2,7 @@
 EYEfollow 1.0
 Home Screen Class
 Gian Favero and Steven Caro
-2022
+2023
 '''
 
 import tkinter as tk
